@@ -6,10 +6,11 @@ coverage/
 *.log
 # Local Environment & Secrets (NEVER push to Git)
 .env
-.env.local
-.env.*.local
 .env*
-!.env.example
+*.env
+
+# Personal documentation & notes (private reference)
+website info/
 
 # Cache & Dependencies
 # Local Databases & Backups (Prevent Data Leakage)
