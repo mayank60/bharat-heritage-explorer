@@ -131,6 +131,10 @@ export function handleHeritageImageError(
   }
 
   // Level 3: Permanent SVG fallback (100% reliable, zero network required)
+  if (img.getAttribute('data-tried-svg') === 'true') {
+    return;
+  }
+  img.setAttribute('data-tried-svg', 'true');
   img.onerror = null;
   img.src = OFFLINE_SVG_HERITAGE;
 }
