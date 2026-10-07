@@ -769,6 +769,13 @@ const StateCategoryExplorerComponent: React.FC<StateCategoryExplorerProps> = ({
   const [stateSearch, setStateSearch] = useState<string>('');
   const [speakingLanguageId, setSpeakingLanguageId] = useState<string | null>(null);
 
+  // Progressive rendering for mobile performance (renders initial 24 monuments, loads rest on-demand)
+  const [visibleMonumentCount, setVisibleMonumentCount] = useState(24);
+
+  useEffect(() => {
+    setVisibleMonumentCount(24);
+  }, [selectedStateId, epochFilter, regionFilter, activeCategory]);
+
   // Smooth skeleton transition state during filtering, epoch switching, or category change
   const [isFiltering, setIsFiltering] = useState(false);
   const prevFiltersRef = useRef({ selectedStateId, activeCategory, epochFilter, regionFilter });
@@ -1338,19 +1345,38 @@ const StateCategoryExplorerComponent: React.FC<StateCategoryExplorerProps> = ({
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                  {stateMonuments.map((item, idx) => (
-                    <MonumentCard
-                      key={`${item.id}-${idx}`}
-                      item={item}
-                      isSaved={savedItemIds.has(item.id)}
-                      lang={lang}
-                      onSelectItem={onSelectItem}
-                      onToggleSave={onToggleSave}
-                      staggerIndex={idx}
-                    />
-                  ))}
-                </div>
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                    {stateMonuments.slice(0, visibleMonumentCount).map((item, idx) => (
+                      <MonumentCard
+                        key={`${item.id}-${idx}`}
+                        item={item}
+                        isSaved={savedItemIds.has(item.id)}
+                        lang={lang}
+                        onSelectItem={onSelectItem}
+                        onToggleSave={onToggleSave}
+                        staggerIndex={idx}
+                      />
+                    ))}
+                  </div>
+
+                  {stateMonuments.length > visibleMonumentCount && (
+                    <div className="text-center pt-6 pb-2">
+                      <button
+                        type="button"
+                        onClick={() => setVisibleMonumentCount((prev) => prev + 24)}
+                        className="btn-glass-clay btn-glass-clay-primary px-6 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold cursor-pointer text-white shadow-lg inline-flex items-center gap-2 hover:scale-105 active:scale-95 transition-all"
+                      >
+                        <span>
+                          {lang === 'hi'
+                            ? `और स्मारक लोड करें (${stateMonuments.length - visibleMonumentCount} शेष)`
+                            : `Load More Monuments (${stateMonuments.length - visibleMonumentCount} remaining)`}
+                        </span>
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}

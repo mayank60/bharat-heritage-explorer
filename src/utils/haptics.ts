@@ -18,18 +18,23 @@ const HAPTIC_PATTERNS: Record<HapticStyle, number> = {
   success: 15,    // Success action (15ms)
 };
 
+let lastScrollCheck = 0;
+
 /**
  * Marks the device as currently scrolling or swiping.
  * Prevents any haptic vibration during scroll movements.
  */
 function handleScrollOrMove() {
+  const now = Date.now();
+  if (now - lastScrollCheck < 80) return;
+  lastScrollCheck = now;
   isScrollingOrSwiping = true;
   if (scrollTimeout !== null) {
     clearTimeout(scrollTimeout);
   }
   scrollTimeout = setTimeout(() => {
     isScrollingOrSwiping = false;
-  }, 150);
+  }, 120);
 }
 
 /**

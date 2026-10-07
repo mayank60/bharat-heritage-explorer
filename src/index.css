@@ -901,53 +901,47 @@ html:not(.dark) .animate-heritage-shimmer {
 
 .card-slide-item {
   opacity: 0;
-  animation: cardSlideEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: calc(var(--stagger-index, 0) * 45ms);
-  will-change: transform, opacity;
-  backface-visibility: hidden;
-  transform: translateZ(0);
+  animation: cardSlideEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: calc(var(--stagger-index, 0) * 30ms);
 }
 
 .card-horizontal-slide {
   opacity: 0;
-  animation: horizontalPillSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: calc(var(--stagger-index, 0) * 30ms);
-  will-change: transform, opacity;
-  backface-visibility: hidden;
+  animation: horizontalPillSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: calc(var(--stagger-index, 0) * 20ms);
 }
 
 .animate-category-slide {
-  animation: categoryContentSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: categoryContentSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .card-interactive-slide {
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.25s ease,
-              background-color 0.25s ease;
-  will-change: transform, box-shadow;
-  backface-visibility: hidden;
-  transform: translateZ(0);
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 360px;
+  transition: transform 0.25s ease,
+              box-shadow 0.25s ease,
+              border-color 0.2s ease,
+              background-color 0.2s ease;
 }
 
-.card-interactive-slide:hover {
-  transform: translateY(-7px) translateZ(0);
+@media (hover: hover) and (pointer: fine) {
+  .card-interactive-slide:hover {
+    transform: translateY(-5px);
+  }
 }
 
 .card-interactive-slide:active {
-  transform: translateY(-2px) scale(0.995);
+  transform: scale(0.99);
 }
 
 html.dark .card-interactive-slide:hover {
-  box-shadow: 0 20px 42px -15px rgba(0, 0, 0, 0.85),
-              0 0 28px -4px rgba(245, 158, 11, 0.2),
-              0 1px 0 0 rgba(255, 255, 255, 0.15) inset !important;
+  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.8),
+              0 0 20px -4px rgba(245, 158, 11, 0.15) !important;
 }
 
 html:not(.dark) .card-interactive-slide:hover {
-  box-shadow: 0 20px 38px -12px rgba(139, 46, 36, 0.16),
-              0 8px 20px -6px rgba(0, 0, 0, 0.08),
-              0 1px 0 0 rgba(255, 255, 255, 0.9) inset !important;
+  box-shadow: 0 14px 28px -10px rgba(139, 46, 36, 0.12),
+              0 6px 14px -4px rgba(0, 0, 0, 0.06) !important;
 }
 
 /* Smooth State Strip Carousel styling */

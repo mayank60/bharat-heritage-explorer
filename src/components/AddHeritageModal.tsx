@@ -96,37 +96,39 @@ export const AddHeritageModal: React.FC<AddHeritageModalProps> = ({
 
   // Automatically search authentic photographs as user enters monument title
   useEffect(() => {
-    if (!title.trim() || customImageUrl.trim().startsWith('data:image/')) return;
+    const cleanName = title.trim();
+    if (!cleanName || cleanName.length < 2 || customImageUrl.trim().startsWith('data:image/')) {
+      if (!cleanName) setAutoPhotos([]);
+      return;
+    }
 
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
 
     debounceTimerRef.current = setTimeout(async () => {
-      const selectedStateName = states.find((s) => s.id === stateId)?.name || '';
-      const query = `${title} ${cityDistrict || ''} ${selectedStateName}`.trim();
       setIsFetchingPhoto(true);
 
       try {
-        const photos = await fetchAuthenticHeritagePhotos(query, 6);
-        if (photos.length > 0) {
-          setAutoPhotos(photos);
-          setActivePhotoIdx(0);
-        } else {
-          // Fallback search with title only
-          const fallbackPhotos = await fetchAuthenticHeritagePhotos(title, 4);
-          setAutoPhotos(fallbackPhotos);
-          setActivePhotoIdx(0);
+        // 1. Primary search: Clean title directly (highest precision from Wikipedia & Wikimedia)
+        let photos = await fetchAuthenticHeritagePhotos(cleanName, 6);
+
+        // 2. Fallback: If 0 photos found and city/district entered, try with location context
+        if (photos.length === 0 && cityDistrict.trim()) {
+          photos = await fetchAuthenticHeritagePhotos(`${cleanName} ${cityDistrict.trim()}`, 6);
         }
+
+        setAutoPhotos(photos);
+        setActivePhotoIdx(0);
       } catch (err) {
         console.warn('Auto photo fetch error:', err);
       } finally {
         setIsFetchingPhoto(false);
       }
-    }, 600);
+    }, 450);
 
     return () => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     };
-  }, [title, stateId, cityDistrict, customImageUrl, states]);
+  }, [title, cityDistrict, customImageUrl]);
 
   if (!isOpen) return null;
 
@@ -462,11 +464,54 @@ export const AddHeritageModal: React.FC<AddHeritageModalProps> = ({
               ) : null}
             </div>
 
-            {/* Direct 1-Tap Device Photo Upload Button */}
+            {/* Discovered Photos Thumbnail Carousel (1-Tap Selection) */}
+            {autoPhotos.length > 0 && !customImageUrl && (
+              <div className="space-y-1.5">
+                <span className="text-[11px] text-zinc-400 block">
+                  {lang === 'hi' ? 'प्रामाणिक तस्वीरें (पसंद की फोटो चुनें):' : 'Authentic photos found (tap to select):'}
+                </span>
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                  {autoPhotos.map((photoUrl, idx) => (
+                    <button
+                      key={photoUrl}
+                      type="button"
+                      onClick={() => setActivePhotoIdx(idx)}
+                      className={`relative w-14 h-14 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
+                        activePhotoIdx === idx
+                          ? 'border-amber-400 scale-105 shadow-md ring-2 ring-amber-400/30'
+                          : 'border-white/10 opacity-70 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={photoUrl} alt="" className="w-full h-full object-cover" />
+                      {activePhotoIdx === idx && (
+                        <span className="absolute bottom-0.5 right-0.5 bg-amber-500 text-stone-950 rounded-full p-0.5">
+                          <Check className="w-2.5 h-2.5 stroke-[3]" />
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Direct Device Photo Upload Buttons: Gallery / Storage + Live Camera */}
             <div className="flex flex-wrap items-center gap-2">
+              {/* Option 1: Phone Gallery / Storage (NO capture attribute = opens file manager / media gallery) */}
               <label className="btn-glass-clay btn-glass-clay-primary px-3.5 py-2 text-white text-xs font-semibold rounded-xl cursor-pointer inline-flex items-center gap-2 shadow-sm">
+                <ImageIcon className="w-3.5 h-3.5 text-amber-300" />
+                <span>{isUploadingPhoto ? 'Uploading...' : lang === 'hi' ? 'फोन गैलरी / स्टोरेज से चुनें' : 'Choose from Gallery / Files'}</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleDeviceFileUpload}
+                />
+              </label>
+
+              {/* Option 2: Live Camera (capture="environment") */}
+              <label className="btn-glass-clay btn-glass-clay-secondary px-3 py-2 text-stone-300 hover:text-white text-xs font-semibold rounded-xl cursor-pointer inline-flex items-center gap-1.5 border border-white/10">
                 <Camera className="w-3.5 h-3.5" />
-                <span>{isUploadingPhoto ? 'Uploading...' : lang === 'hi' ? 'फोन / कैमरे से फोटो अपलोड करें' : 'Upload from Phone / Camera'}</span>
+                <span>{lang === 'hi' ? 'कैमरे से लें' : 'Camera'}</span>
                 <input
                   type="file"
                   accept="image/*"

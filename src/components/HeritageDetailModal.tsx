@@ -1620,26 +1620,12 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
               item.id === key || item.id.includes(key)
             )?.[1];
 
-            let embedUrl = exactVideo?.embed || item.video_url;
-            let watchUrl = exactVideo?.watch || '';
+            // Filter out any obsolete/broken listType=search URLs
+            const validRawUrl = (item.video_url && !item.video_url.includes('listType=search')) ? item.video_url : '';
+            const autoTour = getAuthenticVirtualTourUrl(item.title, item.location_name, exactVideo?.embed || validRawUrl);
 
-            if (!embedUrl) {
-              const autoTour = getAuthenticVirtualTourUrl(item.title, item.location_name);
-              embedUrl = autoTour.embedUrl;
-              watchUrl = autoTour.watchUrl;
-            }
-
-            if (!watchUrl) {
-              if (embedUrl.includes('youtu.be/')) {
-                const videoId = embedUrl.split('youtu.be/')[1]?.split('?')[0];
-                watchUrl = embedUrl;
-                embedUrl = `https://www.youtube.com/embed/${videoId}`;
-              } else if (embedUrl.includes('/embed/')) {
-                watchUrl = embedUrl.replace('/embed/', '/watch?v=');
-              } else {
-                watchUrl = embedUrl;
-              }
-            }
+            const embedUrl = exactVideo?.embed || autoTour.embedUrl;
+            const watchUrl = exactVideo?.watch || autoTour.watchUrl;
 
             return (
               <div className="space-y-4">
@@ -1748,10 +1734,31 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
-                  {/* Direct 1-Tap Photo Upload from Device/Camera (No typing required!) */}
+                  {/* Option 1: Direct 1-Tap Photo Upload from Phone Storage / Gallery (No camera force!) */}
                   <label className="btn-glass-clay btn-glass-clay-primary inline-flex items-center gap-1.5 px-3.5 py-1.5 text-white text-xs font-semibold rounded-xl cursor-pointer shadow-md">
-                    <Camera className="w-3.5 h-3.5" />
-                    <span>{lang === 'hi' ? 'फोटो जोड़ें' : 'Add Photo'}</span>
+                    <ImageIcon className="w-3.5 h-3.5 text-amber-300" />
+                    <span>{lang === 'hi' ? 'फोन गैलरी / स्टोरेज से' : 'Phone Gallery / Files'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const f = e.target.files?.[0];
+                        if (!f) return;
+                        onShowToast(lang === 'hi' ? 'गैलरी से फोटो जोड़ी जा रही है...' : 'Adding photo from gallery...', 'info');
+                        const compressed = await compressImage(f);
+                        if (compressed) {
+                          await handleAddCrowdPhoto(compressed);
+                        }
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+
+                  {/* Option 2: Live Camera (Direct hardware camera capture) */}
+                  <label className="btn-glass-clay btn-glass-clay-secondary inline-flex items-center gap-1.5 px-3 py-1.5 text-stone-300 hover:text-white text-xs font-medium rounded-xl cursor-pointer border border-white/10">
+                    <Camera className="w-3.5 h-3.5 text-amber-400" />
+                    <span>{lang === 'hi' ? 'कैमरा' : 'Camera'}</span>
                     <input
                       type="file"
                       accept="image/*"
@@ -1760,7 +1767,7 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                       onChange={async (e) => {
                         const f = e.target.files?.[0];
                         if (!f) return;
-                        onShowToast(lang === 'hi' ? 'फोटो जोड़ी जा रही है...' : 'Adding photo...', 'info');
+                        onShowToast(lang === 'hi' ? 'कैमरा फोटो जोड़ी जा रही है...' : 'Adding camera photo...', 'info');
                         const compressed = await compressImage(f);
                         if (compressed) {
                           await handleAddCrowdPhoto(compressed);
@@ -1776,7 +1783,8 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                     onClick={async () => {
                       setIsDiscoveringPhotos(true);
                       try {
-                        const photos = await fetchAuthenticHeritagePhotos(`${item.title} ${item.location_name || ''}`, 6);
+                        // Search with clean monument title directly for highest accuracy
+                        const photos = await fetchAuthenticHeritagePhotos(item.title, 6);
                         if (photos.length > 0) {
                           setArchivePhotos(photos);
                           onShowToast(
