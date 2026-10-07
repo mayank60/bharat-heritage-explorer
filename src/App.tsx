@@ -21,6 +21,38 @@ import { cacheHeritageDataOffline, getCachedHeritageItems, getOfflineStorageInfo
 import { fetchCommunityHeritage, subscribeToCommunityHeritage, syncSavedItem, broadcastCrossTab } from './utils/cloudDatabase.ts';
 import { useBodyScrollLock } from './utils/useBodyScrollLock.ts';
 
+// Max Session Inactivity Timeout: 3 days (72 hours of inactivity auto-logout)
+const MAX_SESSION_INACTIVITY_MS = 3 * 24 * 60 * 60 * 1000;
+
+// Helper to validate stored session against 3-day inactivity policy
+function getValidStoredSession(): UserSession | null {
+  try {
+    const saved = localStorage.getItem('bharat_current_user');
+    if (!saved) return null;
+    const user: UserSession = JSON.parse(saved);
+    if (!user || !user.id) return null;
+
+    const lastActiveMs = user.last_active
+      ? new Date(user.last_active).getTime()
+      : user.login_time
+      ? new Date(user.login_time).getTime()
+      : 0;
+
+    // If user hasn't visited/logged in for 3 days, auto-logout
+    if (!lastActiveMs || isNaN(lastActiveMs) || Date.now() - lastActiveMs > MAX_SESSION_INACTIVITY_MS) {
+      localStorage.removeItem('bharat_current_user');
+      return null;
+    }
+
+    // Refresh last_active timestamp
+    const updatedUser = { ...user, last_active: new Date().toISOString() };
+    localStorage.setItem('bharat_current_user', JSON.stringify(updatedUser));
+    return updatedUser;
+  } catch {
+    return null;
+  }
+}
+
 export default function App() {
   // Localization & Theme
   const [lang, setLang] = useState<LanguageKey>(() => {
@@ -100,38 +132,6 @@ export default function App() {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
-
-  // Max Session Inactivity Timeout: 3 days (72 hours of inactivity auto-logout)
-  const MAX_SESSION_INACTIVITY_MS = 3 * 24 * 60 * 60 * 1000;
-
-  // Helper to validate stored session against 3-day inactivity policy
-  const getValidStoredSession = (): UserSession | null => {
-    try {
-      const saved = localStorage.getItem('bharat_current_user');
-      if (!saved) return null;
-      const user: UserSession = JSON.parse(saved);
-      if (!user || !user.id) return null;
-
-      const lastActiveMs = user.last_active
-        ? new Date(user.last_active).getTime()
-        : user.login_time
-        ? new Date(user.login_time).getTime()
-        : 0;
-
-      // If user hasn't visited/logged in for 3 days, auto-logout
-      if (!lastActiveMs || isNaN(lastActiveMs) || Date.now() - lastActiveMs > MAX_SESSION_INACTIVITY_MS) {
-        localStorage.removeItem('bharat_current_user');
-        return null;
-      }
-
-      // Refresh last_active timestamp
-      const updatedUser = { ...user, last_active: new Date().toISOString() };
-      localStorage.setItem('bharat_current_user', JSON.stringify(updatedUser));
-      return updatedUser;
-    } catch {
-      return null;
-    }
-  };
 
   // User Session (persisted in SQLite & localStorage with 3-day inactivity auto-logout)
   const [currentUser, setCurrentUser] = useState<UserSession | null>(() => getValidStoredSession());

@@ -1152,7 +1152,7 @@ app.post('/api/heritage/:id/photos', (req, res) => {
 
 // 17. DELETE /api/heritage/:id/photos/:photoId (Delete contributed photo)
 app.delete('/api/heritage/:id/photos/:photoId', (req, res) => {
-  const { id: monumentId, photoId } = req.params;
+  const { photoId } = req.params;
 
   if (db) {
     try {

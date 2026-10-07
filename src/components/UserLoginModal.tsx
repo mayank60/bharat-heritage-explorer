@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { X, User, Clock, CheckCircle, LogOut, Database, Sparkles } from 'lucide-react';
 import { UserSession } from '../types.ts';
-import { LoginBar } from './LoginBar.tsx';
+import { LoginBar, LoginBarHandle } from './LoginBar.tsx';
 import { sanitizeText } from '../utils/security.ts';
 import { registerVisitorSession } from '../utils/cloudDatabase.ts';
 
@@ -26,7 +26,7 @@ export const UserLoginModal: React.FC<UserLoginModalProps> = ({
 }) => {
   const [identifier, setIdentifier] = useState('');
   const [loading, setLoading] = useState(false);
-  const loginBarRef = React.useRef<import('./LoginBar.tsx').LoginBarHandle>(null);
+  const loginBarRef = useRef<LoginBarHandle>(null);
 
   if (!isOpen) return null;
 

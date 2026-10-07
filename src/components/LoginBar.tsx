@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight, LogOut } from 'lucide-react';
 
@@ -165,6 +165,14 @@ export const LoginBar = forwardRef<LoginBarHandle, LoginBarProps>(({
   const [isEntering, setIsEntering] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   const [isDoorOpen, setIsDoorOpen] = useState(false);
+  const timersRef = useRef<number[]>([]);
+
+  useEffect(() => {
+    return () => {
+      timersRef.current.forEach((t) => window.clearTimeout(t));
+      timersRef.current = [];
+    };
+  }, []);
 
   // Login Walkthrough Flow
   const handleLogin = (e?: React.MouseEvent) => {
@@ -175,30 +183,29 @@ export const LoginBar = forwardRef<LoginBarHandle, LoginBarProps>(({
       return;
     }
 
+    timersRef.current.forEach((t) => window.clearTimeout(t));
+    timersRef.current = [];
+
     // Step A: Walking person starts walking
     setIsEntering(true);
 
     // Step B (120ms): Door opens and radiates golden light
-    const doorOpenTimer = setTimeout(() => {
+    const doorOpenTimer = window.setTimeout(() => {
       setIsDoorOpen(true);
     }, 120);
 
     // Step C (820ms): Person enters door, door softly closes
-    const doorCloseTimer = setTimeout(() => {
+    const doorCloseTimer = window.setTimeout(() => {
       setIsDoorOpen(false);
     }, 820);
 
     // Step D (1050ms): Finish walk-in animation and trigger callback
-    const finishTimer = setTimeout(() => {
+    const finishTimer = window.setTimeout(() => {
       setIsEntering(false);
       onLoginClick?.();
     }, 1050);
 
-    return () => {
-      clearTimeout(doorOpenTimer);
-      clearTimeout(doorCloseTimer);
-      clearTimeout(finishTimer);
-    };
+    timersRef.current.push(doorOpenTimer, doorCloseTimer, finishTimer);
   };
 
   // Expose triggerLogin imperatively for form submission synchronization
@@ -213,22 +220,22 @@ export const LoginBar = forwardRef<LoginBarHandle, LoginBarProps>(({
     e.stopPropagation();
     if (disabled || isEntering || isExiting) return;
 
+    timersRef.current.forEach((t) => window.clearTimeout(t));
+    timersRef.current = [];
+
     setIsExiting(true);
     setIsDoorOpen(true);
 
-    const doorCloseTimer = setTimeout(() => {
+    const doorCloseTimer = window.setTimeout(() => {
       setIsDoorOpen(false);
     }, 750);
 
-    const finishTimer = setTimeout(() => {
+    const finishTimer = window.setTimeout(() => {
       setIsExiting(false);
       onLogoutClick?.();
     }, 1000);
 
-    return () => {
-      clearTimeout(doorCloseTimer);
-      clearTimeout(finishTimer);
-    };
+    timersRef.current.push(doorCloseTimer, finishTimer);
   };
 
   const glassClayClass =

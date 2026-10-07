@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { User, ShieldCheck, Landmark, Headphones, Compass, Sparkles } from 'lucide-react';
 import { UserSession } from '../types.ts';
 import { LanguageKey } from '../i18n.ts';
-import { LoginBar } from './LoginBar.tsx';
+import { LoginBar, LoginBarHandle } from './LoginBar.tsx';
 import { heritageSoundscape } from '../utils/heritageSoundscape.ts';
 import { sanitizeText } from '../utils/security.ts';
 import { registerVisitorSession } from '../utils/cloudDatabase.ts';
@@ -21,7 +21,7 @@ export const LoginGateway: React.FC<LoginGatewayProps> = ({
   const [nameInput, setNameInput] = useState('');
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const loginBarRef = useRef<import('./LoginBar.tsx').LoginBarHandle>(null);
+  const loginBarRef = useRef<LoginBarHandle>(null);
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
