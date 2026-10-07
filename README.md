@@ -68,15 +68,3 @@ docker run -p 5000:5000 bharat-heritage
 14. [x] **Heritage Quiz Game**: Take quiz, verify 15-second countdown timer, immediate answer feedback with explanations, streak counters, and earned badges.
 15. [x] **i18n & Theme**: Toggle between English and हिन्दी; toggle Dark Mode and check contrast compliance.
 
----
-
-## 📚 Complete Documentation Suite (`website info/`)
-
-All architectural blueprints, product requirements, system rules, and design specifications are consolidated inside the **`website info/`** folder:
-- `website info/architecture.md` & `ARCHITECTURE_AND_VIVA.md` — Full-Stack architecture, data pipeline & viva guide.
-- `website info/prd.md` — Product Requirements Document (User personas, functional specs, NFRs).
-- `website info/rules.md` — Engineering rules, 100% oEmbed video policy, ASI formatting discipline.
-- `website info/design.md` — Design Constitution, color tokens, typography & claymorphism.
-- `website info/tasks.md` — Completed milestones (v1.0-v2.5) & future engineering roadmap.
-- `website info/memory.md` — Technical decisions (ADRs), catalog summary & state contracts.
-
