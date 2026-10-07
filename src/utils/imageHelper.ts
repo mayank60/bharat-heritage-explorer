@@ -5,8 +5,9 @@ const ONLINE_FALLBACKS: Record<string, string> = {
   'hawa-mahal': 'https://images.unsplash.com/photo-1605649487212-47bdab064df7?auto=format&fit=crop&w=1000&q=80',
   'taj-mahal': 'https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1000&q=80',
   'golden-temple': 'https://images.unsplash.com/photo-1514222134-b57cbb8ce073?auto=format&fit=crop&w=1000&q=80',
-  'qutub-minar': 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=1000&q=80',
-  'red-fort': 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=1000&q=80',
+  'qutub-minar': 'https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=1000&q=80',
+  'red-fort': 'https://images.unsplash.com/photo-1585135497273-1a86b09fe70e?auto=format&fit=crop&w=1000&q=80',
+  'india-gate': 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=1000&q=80',
   'konark-sun-temple': 'https://images.unsplash.com/photo-1627894483216-2138af692e32?auto=format&fit=crop&w=1000&q=80',
   'meenakshi-temple': 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1000&q=80',
   'brihadisvara-temple': 'https://images.unsplash.com/photo-1627894483216-2138af692e32?auto=format&fit=crop&w=1000&q=80',
@@ -18,7 +19,7 @@ const ONLINE_FALLBACKS: Record<string, string> = {
   'ajanta-ellora': 'https://images.unsplash.com/photo-1609766857041-ed402ea8069a?auto=format&fit=crop&w=1000&q=80',
   'mysore-palace': 'https://images.unsplash.com/photo-1590766940554-634a7ed41450?auto=format&fit=crop&w=1000&q=80',
   'sanchi-stupa': 'https://images.unsplash.com/photo-1598890777032-bde835ba27c2?auto=format&fit=crop&w=1000&q=80',
-  'fatehpur-sikri': 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=1000&q=80',
+  'fatehpur-sikri': 'https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?auto=format&fit=crop&w=1000&q=80',
   'rani-ki-vav': 'https://images.unsplash.com/photo-1627894483216-2138af692e32?auto=format&fit=crop&w=1000&q=80',
   'jaisalmer-fort': 'https://images.unsplash.com/photo-1582560475093-ba66accbc424?auto=format&fit=crop&w=1000&q=80',
 };
@@ -99,6 +100,26 @@ export function handleHeritageImageError(
         img.src = relPath;
         return;
       }
+    }
+  }
+
+  // Level 1b: If /src/assets/images/ failed on server, try /assets/images/
+  if (currentSrc.includes('/src/assets/images/')) {
+    const filename = currentSrc.split('/src/assets/images/')[1];
+    if (filename && img.getAttribute('data-tried-root-asset') !== 'true') {
+      img.setAttribute('data-tried-root-asset', 'true');
+      img.src = '/assets/images/' + filename;
+      return;
+    }
+  }
+
+  // Level 1c: If /assets/images/ failed on server, try /src/assets/images/
+  if (currentSrc.includes('/assets/images/') && !currentSrc.includes('/src/assets/images/')) {
+    const filename = currentSrc.split('/assets/images/')[1];
+    if (filename && img.getAttribute('data-tried-src-asset') !== 'true') {
+      img.setAttribute('data-tried-src-asset', 'true');
+      img.src = '/src/assets/images/' + filename;
+      return;
     }
   }
 

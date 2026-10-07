@@ -3,7 +3,7 @@
  * High-performance offline caching, asset fallbacks, and instant boot without network
  */
 
-const CACHE_VERSION = 'bharat-heritage-v3';
+const CACHE_VERSION = 'bharat-heritage-v4';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 const IMAGE_CACHE = `${CACHE_VERSION}-images`;

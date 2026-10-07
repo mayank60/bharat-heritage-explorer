@@ -41,6 +41,24 @@ html = html.replace(/<link[^>]+rel=["']modulepreload["'][^>]*>/gi, '');
 // Write inlined standalone file to dist directory
 fs.writeFileSync(distStandaloneHtmlPath, html, 'utf8');
 
+// Ensure all monument images exist in dist/src/assets/images and dist/assets/images
+const srcImagesDir = path.resolve(__dirname, '../src/assets/images');
+const distSrcImagesDir = path.join(distDir, 'src/assets/images');
+const distAssetsImagesDir = path.join(distDir, 'assets/images');
+
+if (fs.existsSync(srcImagesDir)) {
+  fs.mkdirSync(distSrcImagesDir, { recursive: true });
+  fs.mkdirSync(distAssetsImagesDir, { recursive: true });
+  const files = fs.readdirSync(srcImagesDir);
+  let copiedCount = 0;
+  for (const file of files) {
+    fs.copyFileSync(path.join(srcImagesDir, file), path.join(distSrcImagesDir, file));
+    fs.copyFileSync(path.join(srcImagesDir, file), path.join(distAssetsImagesDir, file));
+    copiedCount++;
+  }
+  console.log(`✓ Copied ${copiedCount} monument assets to dist/src/assets/images & dist/assets/images`);
+}
+
 console.log('✓ 100% Self-Contained Standalone HTML successfully generated:');
 console.log('  - dist/standalone.html (Size: ' + (html.length / 1024).toFixed(2) + ' KB)');
 console.log('  - dist/index.html (Size: ' + (fs.statSync(distHtmlPath).size / 1024).toFixed(2) + ' KB)');
