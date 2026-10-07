@@ -233,6 +233,19 @@ export async function getOfflineMonumentPhotos(monumentId: string): Promise<Monu
 }
 
 /**
+ * Delete monument photo from IndexedDB
+ */
+export async function deleteMonumentPhotoOffline(photoId: string): Promise<void> {
+  try {
+    const db = await openHeritageDB();
+    const tx = db.transaction([STORE_PHOTOS], 'readwrite');
+    tx.objectStore(STORE_PHOTOS).delete(photoId);
+  } catch (err) {
+    console.warn('[OfflineDB] Could not delete photo from IndexedDB:', err);
+  }
+}
+
+/**
  * Outbox persistence in IndexedDB
  */
 export async function saveOutboxActionOffline(action: { id: string; type: string; payload: any; timestamp: number }): Promise<void> {

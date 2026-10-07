@@ -21,15 +21,22 @@ export const LoginGateway: React.FC<LoginGatewayProps> = ({
   const [nameInput, setNameInput] = useState('');
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const loginBarRef = useRef<import('./LoginBar.tsx').LoginBarHandle>(null);
 
-  const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     const cleanName = sanitizeText(nameInput);
     if (!cleanName) {
       onToast(lang === 'hi' ? 'कृपया डिजिटल पास बनाने के लिए अपना नाम दर्ज करें।' : 'Please enter your full name to generate your visitor pass.');
       inputRef.current?.focus();
       return;
     }
+    loginBarRef.current?.triggerLogin();
+  };
+
+  const executeLoginAction = async () => {
+    const cleanName = sanitizeText(nameInput);
+    if (!cleanName) return;
 
     setLoading(true);
     heritageSoundscape.playTempleChime();
@@ -42,6 +49,7 @@ export const LoginGateway: React.FC<LoginGatewayProps> = ({
       minute: '2-digit',
       hour12: true,
     });
+    const nowIso = new Date().toISOString();
 
     try {
       const res = await fetch('/api/login', {
@@ -53,12 +61,16 @@ export const LoginGateway: React.FC<LoginGatewayProps> = ({
 
       let activeUser: UserSession;
       if (data.success && data.user) {
-        activeUser = data.user;
+        activeUser = {
+          ...data.user,
+          last_active: nowIso,
+        };
       } else {
         activeUser = {
           id: String(Date.now()),
           name: cleanName,
           login_time: now,
+          last_active: nowIso,
         };
       }
 
@@ -76,6 +88,7 @@ export const LoginGateway: React.FC<LoginGatewayProps> = ({
         id: String(Date.now()),
         name: cleanName,
         login_time: now,
+        last_active: nowIso,
       };
 
       registerVisitorSession({
@@ -176,7 +189,7 @@ export const LoginGateway: React.FC<LoginGatewayProps> = ({
           </div>
 
           {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-4 text-left">
+          <form onSubmit={handleFormSubmit} className="space-y-4 text-left">
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
                 Visitor Full Name *
@@ -203,20 +216,22 @@ export const LoginGateway: React.FC<LoginGatewayProps> = ({
             {/* Primary Action Button: Enhanced Interactive Walkthrough Portal */}
             <div className="pt-1">
               <LoginBar
-                label={loading ? 'Entering...' : 'Enter Sanctuary'}
+                ref={loginBarRef}
+                type="submit"
+                label={loading ? (lang === 'hi' ? 'प्रवेश कर रहे हैं...' : 'Entering...') : (lang === 'hi' ? 'अभयारण्य में प्रवेश करें' : 'Enter Sanctuary')}
                 variant="violet"
                 disabled={loading}
                 onBeforeLogin={() => {
                   const cleanName = nameInput.trim();
                   if (!cleanName) {
-                    onToast('Please enter your full name to generate your visitor pass.');
+                    onToast(lang === 'hi' ? 'कृपया डिजिटल पास बनाने के लिए अपना नाम दर्ज करें।' : 'Please enter your full name to generate your visitor pass.');
                     inputRef.current?.focus();
                     return false;
                   }
                   return true;
                 }}
                 onLoginClick={() => {
-                  handleSubmit();
+                  executeLoginAction();
                 }}
               />
             </div>

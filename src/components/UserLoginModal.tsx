@@ -26,11 +26,18 @@ export const UserLoginModal: React.FC<UserLoginModalProps> = ({
 }) => {
   const [identifier, setIdentifier] = useState('');
   const [loading, setLoading] = useState(false);
+  const loginBarRef = React.useRef<import('./LoginBar.tsx').LoginBarHandle>(null);
 
   if (!isOpen) return null;
 
-  const handleLogin = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanName = sanitizeText(identifier);
+    if (!cleanName) return;
+    loginBarRef.current?.triggerLogin();
+  };
+
+  const executeLoginAction = async () => {
     const cleanName = sanitizeText(identifier);
     if (!cleanName) {
       return;
@@ -45,6 +52,7 @@ export const UserLoginModal: React.FC<UserLoginModalProps> = ({
       minute: '2-digit',
       hour12: true,
     });
+    const nowIso = new Date().toISOString();
 
     try {
       const res = await fetch('/api/login', {
@@ -56,12 +64,16 @@ export const UserLoginModal: React.FC<UserLoginModalProps> = ({
 
       let activeUser: UserSession;
       if (data.success && data.user) {
-        activeUser = data.user;
+        activeUser = {
+          ...data.user,
+          last_active: nowIso,
+        };
       } else {
         activeUser = {
           id: String(Date.now()),
           name: cleanName,
           login_time: now,
+          last_active: nowIso,
         };
       }
 
@@ -82,6 +94,7 @@ export const UserLoginModal: React.FC<UserLoginModalProps> = ({
         id: String(Date.now()),
         name: cleanName,
         login_time: now,
+        last_active: nowIso,
       };
 
       registerVisitorSession({
@@ -239,7 +252,7 @@ export const UserLoginModal: React.FC<UserLoginModalProps> = ({
             </div>
           ) : (
             /* Sign In Form */
-            <form onSubmit={handleLogin} className="space-y-4 text-left">
+            <form onSubmit={handleFormSubmit} className="space-y-4 text-left">
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-300 mb-1.5">
                   Visitor Full Name / ID *
@@ -266,6 +279,8 @@ export const UserLoginModal: React.FC<UserLoginModalProps> = ({
 
               <div>
                 <LoginBar
+                  ref={loginBarRef}
+                  type="submit"
                   variant="primary"
                   label={loading ? 'Generating Visitor Pass...' : 'Generate Visitor Pass'}
                   disabled={loading}
@@ -274,7 +289,7 @@ export const UserLoginModal: React.FC<UserLoginModalProps> = ({
                     return Boolean(cleanName);
                   }}
                   onLoginClick={() => {
-                    handleLogin();
+                    executeLoginAction();
                   }}
                 />
               </div>

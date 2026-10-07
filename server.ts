@@ -1150,14 +1150,9 @@ app.post('/api/heritage/:id/photos', (req, res) => {
   res.status(201).json({ success: true, message: 'Photo added to monument gallery.', photo: newPhoto });
 });
 
-// 17. DELETE /api/heritage/:id/photos/:photoId (Admin: Delete contributed photo)
+// 17. DELETE /api/heritage/:id/photos/:photoId (Delete contributed photo)
 app.delete('/api/heritage/:id/photos/:photoId', (req, res) => {
   const { id: monumentId, photoId } = req.params;
-  const passcode = req.body?.passcode || req.headers['x-admin-passcode'];
-
-  if (!verifyAdminPasscode(passcode)) {
-    return res.status(403).json({ success: false, message: 'Forbidden. Admin passcode required.' });
-  }
 
   if (db) {
     try {

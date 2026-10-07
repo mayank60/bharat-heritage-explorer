@@ -234,7 +234,13 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
   const [captionInput, setCaptionInput] = useState('');
   const [photoUrlInput, setPhotoUrlInput] = useState('');
   const [isSubmittingPhoto, setIsSubmittingPhoto] = useState(false);
-  const [lightboxPhoto, setLightboxPhoto] = useState<{ url: string; caption?: string; contributor?: string } | null>(null);
+  const [lightboxPhoto, setLightboxPhoto] = useState<{
+    url: string;
+    caption?: string;
+    contributor?: string;
+    photoId?: string;
+    isCustomIndex?: number;
+  } | null>(null);
 
   // Auto-discovered historical archive photos from Wikimedia Commons
   const [archivePhotos, setArchivePhotos] = useState<string[]>(() => {
@@ -330,9 +336,12 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
     try {
       await deleteMonumentPhoto(photoId, item.id, 'asi@bharat');
       setCrowdPhotos((prev) => prev.filter((p) => p.id !== photoId));
-      onShowToast(lang === 'hi' ? 'फोटो हटा दी गई।' : 'Photo removed.', 'info');
+      if (lightboxPhoto?.photoId === photoId) {
+        setLightboxPhoto(null);
+      }
+      onShowToast(lang === 'hi' ? 'फोटो गैलरी से हटा दी गई।' : 'Photo removed from gallery.', 'info');
     } catch {
-      // ignore
+      onShowToast(lang === 'hi' ? 'फोटो हटाने में समस्या हुई।' : 'Failed to delete photo.', 'error');
     }
   };
 
@@ -2067,7 +2076,14 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                     <div
                       key={photo.id}
                       className="relative aspect-4/3 rounded-xl overflow-hidden border border-amber-500/30 bg-[#1C1917] group cursor-pointer shadow-md"
-                      onClick={() => setLightboxPhoto({ url: photo.image_url, caption: photo.caption, contributor: photo.contributor_name })}
+                      onClick={() =>
+                        setLightboxPhoto({
+                          url: photo.image_url,
+                          caption: photo.caption,
+                          contributor: photo.contributor_name,
+                          photoId: photo.id,
+                        })
+                      }
                     >
                       <LazyHeritageImage
                         src={photo.image_url}
@@ -2082,22 +2098,28 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                           <span>{photo.contributor_name}</span>
                         </span>
                       </div>
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-3">
-                        <div className="text-left text-white min-w-0 pr-2">
-                          {photo.caption && <p className="text-xs font-semibold truncate">{photo.caption}</p>}
-                          <p className="text-[10px] text-zinc-300">{new Date(photo.created_at).toLocaleDateString()}</p>
-                        </div>
+
+                      {/* Always accessible Delete Button on Mobile, Hover on Desktop */}
+                      <div className="absolute top-2 right-2 z-20">
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDeletePhoto(photo.id);
                           }}
-                          className="btn-glass-clay btn-glass-clay-danger p-2 rounded-xl text-white transition-colors text-xs cursor-pointer shrink-0"
-                          title={lang === 'hi' ? 'फोटो हटाएं' : 'Remove photo'}
+                          className="btn-glass-clay btn-glass-clay-danger p-1.5 sm:p-2 rounded-xl text-white shadow-md opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:opacity-100 cursor-pointer flex items-center gap-1"
+                          title={lang === 'hi' ? 'फोटो हटाएं' : 'Delete photo'}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-3.5 h-3.5 text-red-200" />
+                          <span className="text-[10px] sm:hidden font-medium">{lang === 'hi' ? 'हटाएं' : 'Delete'}</span>
                         </button>
+                      </div>
+
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-3">
+                        <div className="text-left text-white min-w-0 pr-2">
+                          {photo.caption && <p className="text-xs font-semibold truncate">{photo.caption}</p>}
+                          <p className="text-[10px] text-zinc-300">{new Date(photo.created_at).toLocaleDateString()}</p>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -2107,7 +2129,13 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                     <div
                       key={idx}
                       className="relative aspect-4/3 rounded-xl overflow-hidden border border-white/10 bg-[#1C1917] group cursor-pointer"
-                      onClick={() => setLightboxPhoto({ url: imgUrl, caption: `${item.title} Historical Archive` })}
+                      onClick={() =>
+                        setLightboxPhoto({
+                          url: imgUrl,
+                          caption: `${item.title} Historical Archive`,
+                          isCustomIndex: idx,
+                        })
+                      }
                     >
                       <LazyHeritageImage
                         src={imgUrl}
@@ -2116,10 +2144,9 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                         categoryId={item.category_id}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-3">
-                        <span className="text-xs font-medium text-white">
-                          {lang === 'hi' ? `चित्र ${idx + 1}` : `Photo ${idx + 1}`}
-                        </span>
+
+                      {/* Always accessible Delete Button on Mobile, Hover on Desktop */}
+                      <div className="absolute top-2 right-2 z-20">
                         <button
                           type="button"
                           onClick={(e) => {
@@ -2135,18 +2162,25 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                             });
                             onShowToast(lang === 'hi' ? 'फोटो हटा दी गई' : 'Photo removed', 'info');
                           }}
-                          className="btn-glass-clay btn-glass-clay-danger p-2 rounded-xl text-white transition-colors text-xs cursor-pointer"
+                          className="btn-glass-clay btn-glass-clay-danger p-1.5 sm:p-2 rounded-xl text-white shadow-md opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:opacity-100 cursor-pointer flex items-center gap-1"
                           title={lang === 'hi' ? 'फोटो हटाएं' : 'Remove photo'}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-3.5 h-3.5 text-red-200" />
+                          <span className="text-[10px] sm:hidden font-medium">{lang === 'hi' ? 'हटाएं' : 'Delete'}</span>
                         </button>
+                      </div>
+
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-3">
+                        <span className="text-xs font-medium text-white">
+                          {lang === 'hi' ? `चित्र ${idx + 1}` : `Photo ${idx + 1}`}
+                        </span>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
 
-              {/* Fullscreen Photo Lightbox Preview (Mobile-Safe, Never Overflows) */}
+              {/* Fullscreen Photo Lightbox Preview (Mobile-Safe with Delete Action) */}
               {lightboxPhoto && (
                 <div
                   className="fixed inset-0 z-60 bg-black/95 backdrop-blur-md flex items-center justify-center p-2 sm:p-4"
@@ -2156,13 +2190,45 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                     className="relative w-full max-w-3xl max-h-[86vh] bg-[#0c1015] rounded-2xl overflow-hidden border border-white/20 shadow-2xl flex flex-col mx-auto"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <button
-                      type="button"
-                      onClick={() => setLightboxPhoto(null)}
-                      className="absolute top-3 right-3 z-30 btn-glass-clay btn-glass-clay-icon w-8 h-8 rounded-full text-white cursor-pointer bg-black/80 hover:bg-black"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+                    {/* Top Lightbox Actions */}
+                    <div className="absolute top-3 right-3 z-30 flex items-center gap-2">
+                      {(lightboxPhoto.photoId || typeof lightboxPhoto.isCustomIndex === 'number') && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (lightboxPhoto.photoId) {
+                              handleDeletePhoto(lightboxPhoto.photoId);
+                            } else if (typeof lightboxPhoto.isCustomIndex === 'number') {
+                              const idx = lightboxPhoto.isCustomIndex;
+                              setCustomGallery((prev) => {
+                                const updated = prev.filter((_, i) => i !== idx);
+                                MEMORY_GALLERY_CACHE[item.id] = updated;
+                                item.gallery = updated;
+                                try {
+                                  localStorage.setItem(`gallery_${item.id}`, JSON.stringify(updated));
+                                } catch {}
+                                return updated;
+                              });
+                              setLightboxPhoto(null);
+                              onShowToast(lang === 'hi' ? 'फोटो हटा दी गई।' : 'Photo removed from gallery.', 'info');
+                            }
+                          }}
+                          className="btn-glass-clay btn-glass-clay-danger px-3 py-1.5 rounded-xl text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg cursor-pointer"
+                          title={lang === 'hi' ? 'इस फोटो को हटाएं' : 'Delete this photo'}
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-red-200" />
+                          <span>{lang === 'hi' ? 'फोटो हटाएं' : 'Delete Photo'}</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setLightboxPhoto(null)}
+                        className="btn-glass-clay btn-glass-clay-icon w-8 h-8 rounded-full text-white cursor-pointer bg-black/80 hover:bg-black"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
                     <div className="flex-1 min-h-0 flex items-center justify-center p-2 sm:p-4 bg-black/50 overflow-hidden">
                       <img
                         src={lightboxPhoto.url}

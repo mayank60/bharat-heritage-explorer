@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight, LogOut } from 'lucide-react';
 
@@ -48,7 +48,7 @@ export const DoorOpen: React.FC<{ className?: string; size?: number }> = ({
   </svg>
 );
 
-// 2. Walking Character with animated stride
+// 2. Walking Character with animated natural stride cycle
 export const WalkingPerson: React.FC<{
   className?: string;
   isWalking?: boolean;
@@ -63,16 +63,77 @@ export const WalkingPerson: React.FC<{
     strokeLinejoin="round"
     className={`${className} ${direction === 'left' ? 'scale-x-[-1]' : ''}`}
   >
-    <circle cx="12" cy="4.5" r="2.2" fill="currentColor" />
+    {/* Head with subtle natural gait bobbing */}
+    <motion.circle
+      cx="12"
+      cy="4.5"
+      r="2.2"
+      fill="currentColor"
+      animate={isWalking ? { cy: [4.5, 3.9, 4.5, 3.9, 4.5] } : { cy: 4.5 }}
+      transition={{ duration: 0.44, repeat: Infinity, ease: 'easeInOut' }}
+    />
+    {/* Torso */}
     <path d="M12 6.8v6" />
-    <path d={isWalking ? "M8.5 9.5l3.5 1.5 3.5-1.5" : "M9.5 10.5l2.5 1 2.5-1"} />
-    <path d={isWalking ? "M12 12.8l-3.2 6.2M12 12.8l3.8 6.2" : "M10.2 19l1.8-6.2 1.8 6.2"} />
+    {/* Dynamic swinging arms */}
+    {isWalking ? (
+      <>
+        <motion.path
+          d="M12 9 L8 12.5"
+          animate={{ d: ['M12 9 L8 12.5', 'M12 9 L15.5 10.5', 'M12 9 L8 12.5'] }}
+          transition={{ duration: 0.44, repeat: Infinity, ease: 'easeInOut' }}
+          strokeOpacity="0.75"
+        />
+        <motion.path
+          d="M12 9 L16 11"
+          animate={{ d: ['M12 9 L16 11', 'M12 9 L8.5 12.5', 'M12 9 L16 11'] }}
+          transition={{ duration: 0.44, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      </>
+    ) : (
+      <path d="M9.5 10.5l2.5 1 2.5-1" />
+    )}
+    {/* Dynamic alternating stride legs */}
+    {isWalking ? (
+      <>
+        <motion.path
+          d="M12 12.8 L7.5 18.8"
+          animate={{
+            d: [
+              'M12 12.8 L7.5 18.8',
+              'M12 12.8 L11.8 17.5',
+              'M12 12.8 L16.5 18.8',
+              'M12 12.8 L7.5 18.8',
+            ],
+          }}
+          transition={{ duration: 0.44, repeat: Infinity, ease: 'easeInOut' }}
+          strokeOpacity="0.8"
+        />
+        <motion.path
+          d="M12 12.8 L16.5 18.8"
+          animate={{
+            d: [
+              'M12 12.8 L16.5 18.8',
+              'M12 12.8 L11.8 17.5',
+              'M12 12.8 L7.5 18.8',
+              'M12 12.8 L16.5 18.8',
+            ],
+          }}
+          transition={{ duration: 0.44, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      </>
+    ) : (
+      <path d="M10.2 19l1.8-6.2 1.8 6.2" />
+    )}
   </svg>
 );
 
 export const CharacterInMotion = WalkingPerson;
 
-interface LoginBarProps {
+export interface LoginBarHandle {
+  triggerLogin: () => void;
+}
+
+export interface LoginBarProps {
   label?: string;
   userName?: string;
   isLoggedIn?: boolean;
@@ -87,9 +148,9 @@ interface LoginBarProps {
 
 /**
  * LoginBar: Pure Glassmorphism + Claymorphism interactive Login Button Bar.
- * Perfectly centered, non-overlapping with smooth walking person & door animation.
+ * Integrated walk-in animation portal where character walks smoothly into the sanctum door.
  */
-export const LoginBar: React.FC<LoginBarProps> = ({
+export const LoginBar = forwardRef<LoginBarHandle, LoginBarProps>(({
   label = 'Login',
   userName,
   isLoggedIn: externalIsLoggedIn = false,
@@ -100,19 +161,14 @@ export const LoginBar: React.FC<LoginBarProps> = ({
   type = 'button',
   variant = 'violet',
   className = '',
-}) => {
+}, ref) => {
   const [isEntering, setIsEntering] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(externalIsLoggedIn);
   const [isDoorOpen, setIsDoorOpen] = useState(false);
 
-  useEffect(() => {
-    setIsLoggedIn(externalIsLoggedIn);
-  }, [externalIsLoggedIn]);
-
   // Login Walkthrough Flow
-  const handleLogin = (e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleLogin = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
     if (disabled || isEntering || isExiting) return;
 
     if (onBeforeLogin && !onBeforeLogin()) {
@@ -122,22 +178,21 @@ export const LoginBar: React.FC<LoginBarProps> = ({
     // Step A: Walking person starts walking
     setIsEntering(true);
 
-    // Step B (100ms): Door opens
+    // Step B (120ms): Door opens and radiates golden light
     const doorOpenTimer = setTimeout(() => {
       setIsDoorOpen(true);
-    }, 100);
+    }, 120);
 
-    // Step C (750ms): Person enters door, door closes
+    // Step C (820ms): Person enters door, door softly closes
     const doorCloseTimer = setTimeout(() => {
       setIsDoorOpen(false);
-    }, 750);
+    }, 820);
 
-    // Step D (1000ms): Finish login action
+    // Step D (1050ms): Finish walk-in animation and trigger callback
     const finishTimer = setTimeout(() => {
       setIsEntering(false);
-      setIsLoggedIn(true);
       onLoginClick?.();
-    }, 1000);
+    }, 1050);
 
     return () => {
       clearTimeout(doorOpenTimer);
@@ -145,6 +200,13 @@ export const LoginBar: React.FC<LoginBarProps> = ({
       clearTimeout(finishTimer);
     };
   };
+
+  // Expose triggerLogin imperatively for form submission synchronization
+  useImperativeHandle(ref, () => ({
+    triggerLogin: () => {
+      handleLogin();
+    },
+  }));
 
   // Logout Flow
   const handleLogout = (e: React.MouseEvent) => {
@@ -160,7 +222,6 @@ export const LoginBar: React.FC<LoginBarProps> = ({
 
     const finishTimer = setTimeout(() => {
       setIsExiting(false);
-      setIsLoggedIn(false);
       onLogoutClick?.();
     }, 1000);
 
@@ -174,7 +235,7 @@ export const LoginBar: React.FC<LoginBarProps> = ({
     variant === 'primary' ? 'btn-glass-clay-primary' : 'btn-glass-clay-violet';
 
   // Active pass state
-  if (isLoggedIn && !isExiting) {
+  if (externalIsLoggedIn && !isExiting) {
     return (
       <div
         className={`btn-glass-clay btn-glass-clay-emerald w-full py-3 px-4 rounded-xl flex items-center justify-between gap-3 ${className}`}
@@ -202,7 +263,7 @@ export const LoginBar: React.FC<LoginBarProps> = ({
     <button
       type={type}
       disabled={disabled || isEntering || isExiting}
-      onClick={isLoggedIn ? handleLogout : handleLogin}
+      onClick={externalIsLoggedIn ? handleLogout : (e) => handleLogin(e)}
       className={`btn-glass-clay ${glassClayClass} w-full py-3.5 px-4 text-white text-xs sm:text-sm font-semibold rounded-xl flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-60 relative overflow-hidden transform-gpu ${className}`}
     >
       {/* Subtle Inner Sheen Sweep during Door Transition */}
@@ -226,81 +287,91 @@ export const LoginBar: React.FC<LoginBarProps> = ({
       </span>
 
       {/* Integrated Walking Person & Door Animation Portal */}
-      <div className="relative z-10 flex items-center gap-1.5 shrink-0 ml-1">
-        {/* Walking Track */}
-        <div className="relative w-7 h-5 flex items-center justify-center overflow-hidden">
+      <div className="relative z-10 flex items-center shrink-0 ml-1">
+        {/* Unified Walkway Stage */}
+        <div className="relative w-14 sm:w-16 h-6 flex items-center overflow-hidden rounded-md bg-black/20 border border-white/5">
+          {/* Pathway line */}
+          <div className="absolute bottom-0.5 left-1 right-1 h-[1px] bg-gradient-to-r from-white/10 via-amber-400/30 to-amber-300/60" />
+
+          {/* Traveler moving across the walkway straight into the sanctum door */}
           <motion.div
+            initial={false}
             animate={
               isEntering
                 ? {
-                    x: [-14, -5, 3, 11],
-                    y: [0, -1.5, 0, -1.5, 0],
-                    opacity: [1, 1, 0.7, 0],
-                    scale: [1, 0.95, 0.85, 0.7],
+                    x: [2, 14, 26, 36],
+                    y: [0, -1, 0, -1, 0],
+                    opacity: [1, 1, 0.9, 0],
+                    scale: [1, 0.95, 0.85, 0.55],
                   }
                 : isExiting
                 ? {
-                    x: [11, 3, -5, -14],
-                    y: [0, -1.5, 0, -1.5, 0],
-                    opacity: [0, 0.7, 1, 1],
-                    scale: [0.7, 0.85, 0.95, 1],
+                    x: [36, 26, 14, 2],
+                    y: [0, -1, 0, -1, 0],
+                    opacity: [0, 0.8, 1, 1],
+                    scale: [0.55, 0.85, 0.95, 1],
                   }
                 : {
-                    x: 0,
+                    x: 2,
                     y: 0,
                     opacity: 1,
                     scale: 1,
                   }
             }
             transition={{
-              duration: isEntering || isExiting ? 0.95 : 0.2,
+              duration: isEntering || isExiting ? 1.05 : 0.2,
               ease: 'easeInOut',
             }}
-            className="flex items-center justify-center"
+            className="absolute left-0 top-0 bottom-0 flex items-center z-10"
           >
             <WalkingPerson
               isWalking={isEntering || isExiting}
               direction={isExiting ? 'left' : 'right'}
               className={`w-4 h-4 ${
                 isEntering || isExiting
-                  ? 'text-amber-200 drop-shadow-[0_0_6px_rgba(253,230,138,0.9)]'
+                  ? 'text-amber-200 drop-shadow-[0_0_8px_rgba(253,230,138,0.95)]'
                   : 'text-white/90'
               }`}
             />
           </motion.div>
-        </div>
 
-        {/* Door (Open vs Closed) */}
-        <div className="shrink-0 flex items-center justify-center">
-          <AnimatePresence mode="wait">
-            {isDoorOpen ? (
-              <motion.div
-                key="door-open"
-                initial={{ opacity: 0, scale: 0.85 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.85 }}
-                transition={{ duration: 0.16 }}
-              >
-                <DoorOpen className="w-4 h-4 text-amber-200 drop-shadow-[0_0_8px_rgba(253,230,138,0.9)]" />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="door-closed"
-                initial={{ opacity: 0, scale: 0.85 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.85 }}
-                transition={{ duration: 0.16 }}
-              >
-                <DoorClosed className="w-4 h-4 text-white/90" />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Temple Sanctum Door at the right end */}
+          <div className="absolute right-1 top-0 bottom-0 flex items-center justify-center z-0">
+            <AnimatePresence mode="wait">
+              {isDoorOpen ? (
+                <motion.div
+                  key="door-open"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.18 }}
+                  className="relative"
+                >
+                  {/* Radiant sanctum glow */}
+                  <div className="absolute -inset-1 rounded-full bg-amber-400/30 blur-xs pointer-events-none" />
+                  <DoorOpen className="w-4 h-4 text-amber-200 drop-shadow-[0_0_10px_rgba(253,230,138,0.95)]" />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="door-closed"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  <DoorClosed className="w-4 h-4 text-white/90" />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
         {!isEntering && !isExiting && (
-          <ArrowRight className="w-3.5 h-3.5 text-white/90 shrink-0" />
+          <ArrowRight className="w-3.5 h-3.5 text-white/80 shrink-0 ml-1.5" />
         )}
       </div>
     </button>
   );
-};
+});
+
+LoginBar.displayName = 'LoginBar';

@@ -101,15 +101,40 @@ export default function App() {
     };
   }, []);
 
-  // User Session (persisted in SQLite & localStorage)
-  const [currentUser, setCurrentUser] = useState<UserSession | null>(() => {
+  // Max Session Inactivity Timeout: 3 days (72 hours of inactivity auto-logout)
+  const MAX_SESSION_INACTIVITY_MS = 3 * 24 * 60 * 60 * 1000;
+
+  // Helper to validate stored session against 3-day inactivity policy
+  const getValidStoredSession = (): UserSession | null => {
     try {
       const saved = localStorage.getItem('bharat_current_user');
-      return saved ? JSON.parse(saved) : null;
+      if (!saved) return null;
+      const user: UserSession = JSON.parse(saved);
+      if (!user || !user.id) return null;
+
+      const lastActiveMs = user.last_active
+        ? new Date(user.last_active).getTime()
+        : user.login_time
+        ? new Date(user.login_time).getTime()
+        : 0;
+
+      // If user hasn't visited/logged in for 3 days, auto-logout
+      if (!lastActiveMs || isNaN(lastActiveMs) || Date.now() - lastActiveMs > MAX_SESSION_INACTIVITY_MS) {
+        localStorage.removeItem('bharat_current_user');
+        return null;
+      }
+
+      // Refresh last_active timestamp
+      const updatedUser = { ...user, last_active: new Date().toISOString() };
+      localStorage.setItem('bharat_current_user', JSON.stringify(updatedUser));
+      return updatedUser;
     } catch {
       return null;
     }
-  });
+  };
+
+  // User Session (persisted in SQLite & localStorage with 3-day inactivity auto-logout)
+  const [currentUser, setCurrentUser] = useState<UserSession | null>(() => getValidStoredSession());
 
   // Real-time Cross-Device Visitors & Logins Synchronization State
   const [allUsers, setAllUsers] = useState<UserSession[]>([]);
@@ -227,12 +252,16 @@ export default function App() {
   }, [fetchLiveUsers]);
 
   const handleLoginSuccess = (user: UserSession) => {
-    setCurrentUser(user);
+    const userWithActive: UserSession = {
+      ...user,
+      last_active: new Date().toISOString(),
+    };
+    setCurrentUser(userWithActive);
     try {
-      localStorage.setItem('bharat_current_user', JSON.stringify(user));
+      localStorage.setItem('bharat_current_user', JSON.stringify(userWithActive));
       localStorage.setItem('bharat_cross_tab_sync', Date.now().toString());
     } catch {}
-    broadcastCrossTab('USER_SESSION_UPDATED', user);
+    broadcastCrossTab('USER_SESSION_UPDATED', userWithActive);
     // Trigger immediate live refresh
     fetchLiveUsers();
   };
@@ -260,6 +289,40 @@ export default function App() {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 4000);
   };
+
+  // Active session tracking & auto-logout check after 3 days of inactivity
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const verifySessionFreshness = () => {
+      const valid = getValidStoredSession();
+      if (!valid) {
+        handleLogout();
+        showToast(
+          lang === 'hi'
+            ? '3 दिन की निष्क्रियता के कारण आपका सत्र समाप्त हो गया है। कृपया पुनः साइन इन करें।'
+            : 'Your session has expired after 3 days of inactivity. Please sign in again.',
+          'info'
+        );
+      }
+    };
+
+    const handleFocus = () => {
+      if (!document.hidden) verifySessionFreshness();
+    };
+
+    window.addEventListener('visibilitychange', handleFocus);
+    window.addEventListener('focus', handleFocus);
+
+    // Periodic check every 15 minutes
+    const interval = setInterval(verifySessionFreshness, 15 * 60 * 1000);
+
+    return () => {
+      window.removeEventListener('visibilitychange', handleFocus);
+      window.removeEventListener('focus', handleFocus);
+      clearInterval(interval);
+    };
+  }, [currentUser?.id, lang]);
 
   const dismissToast = (id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));

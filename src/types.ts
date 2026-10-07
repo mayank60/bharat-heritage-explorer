@@ -126,6 +126,7 @@ export interface UserSession {
   id: string;
   name: string;
   login_time: string;
+  last_active?: string;
   role?: string;
 }
 
