@@ -75,8 +75,9 @@ setInterval(() => {
 // Apply API rate limiter to all /api routes
 app.use('/api', apiRateLimiter(200, 60000));
 
-// 3. Request Payload Size Guard (Prevents Denial of Service via huge payloads)
-app.use(express.json({ limit: '1mb' }));
+// 3. Request Payload Size Guard (Supports compressed community photos)
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // 3. Performance & Monitoring Telemetry Middleware
 app.use((req, res, next) => {

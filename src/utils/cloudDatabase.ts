@@ -154,8 +154,16 @@ export async function flushOfflineOutbox(): Promise<number> {
         flushedCount++;
         removeOutboxActionOffline(item.id).catch(() => {});
       } else if (item.type === 'add_photo') {
-        if (supabase) {
-          const { error } = await supabase.from('monument_photos').upsert([item.payload]);
+        if (supabase && item.payload) {
+          const { id, monument_id, image_url, caption, contributor_name, created_at } = item.payload;
+          const { error } = await supabase.from('monument_photos').upsert([{
+            id,
+            monument_id,
+            image_url,
+            caption: caption || null,
+            contributor_name: contributor_name || 'Heritage Explorer',
+            created_at: created_at || new Date().toISOString(),
+          }]);
           if (error) throw error;
         }
         await fetch(`/api/heritage/${encodeURIComponent(item.payload.monument_id)}/photos`, {
@@ -626,7 +634,6 @@ export async function addMonumentPhoto(params: {
           caption: photo.caption || null,
           contributor_name: photo.contributor_name,
           created_at: photo.created_at,
-          verified: true,
         },
       ]);
       if (!error) supabaseSuccess = true;

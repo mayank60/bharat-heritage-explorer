@@ -88,6 +88,11 @@ const getEpigraphy = (itemId: string, title: string) => {
 // In-memory persistent gallery cache so user photos never disappear during session
 const MEMORY_GALLERY_CACHE: Record<string, string[]> = {};
 
+// In-memory per-monument cache for discovered archive photos
+// Ensures Monument A's discovered photos never leak into Monument B,
+// and preserves discovered photos for visited monuments without re-fetching
+const MONUMENT_ARCHIVE_PHOTOS_CACHE = new Map<string, string[]>();
+
 // Client-side image compressor: converts large photos (5-10MB) to optimized 70KB JPEGs
 // This prevents LocalStorage QuotaExceededError and ensures photos persist permanently!
 const compressImage = (file: File): Promise<string> => {
@@ -232,8 +237,26 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
   const [lightboxPhoto, setLightboxPhoto] = useState<{ url: string; caption?: string; contributor?: string } | null>(null);
 
   // Auto-discovered historical archive photos from Wikimedia Commons
-  const [archivePhotos, setArchivePhotos] = useState<string[]>([]);
+  const [archivePhotos, setArchivePhotos] = useState<string[]>(() => {
+    if (!item?.id) return [];
+    return MONUMENT_ARCHIVE_PHOTOS_CACHE.get(item.id) || [];
+  });
   const [isDiscoveringPhotos, setIsDiscoveringPhotos] = useState(false);
+
+  // Critical fix: Whenever the active monument changes (or modal re-opens for another monument),
+  // reset state so that Monument A's photos/videos/galleries never leak into Monument B!
+  useEffect(() => {
+    if (!item?.id) return;
+    setCustomGallery(getInitialGallery(item));
+    setArchivePhotos(MONUMENT_ARCHIVE_PHOTOS_CACHE.get(item.id) || []);
+    setCrowdPhotos([]);
+    setIsDiscoveringPhotos(false);
+    setIsVideoLoaded(false);
+    setHeroImageLoaded(false);
+    setShowPhotoModal(false);
+    setPhotoUrlInput('');
+    setCaptionInput('');
+  }, [item?.id]);
 
   // Auto-discover authentic archive photos when entering gallery if empty
   useEffect(() => {
@@ -246,10 +269,11 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
       !isDiscoveringPhotos
     ) {
       setIsDiscoveringPhotos(true);
-      fetchAuthenticHeritagePhotos(`${item.title} ${item.location_name || ''}`, 6)
+      fetchAuthenticHeritagePhotos(item.title, item.location_name, 6)
         .then((photos) => {
           if (Array.isArray(photos) && photos.length > 0) {
             setArchivePhotos(photos);
+            MONUMENT_ARCHIVE_PHOTOS_CACHE.set(item.id, photos);
           }
         })
         .catch(() => {})
@@ -1614,17 +1638,39 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                 embed: 'https://www.youtube.com/embed/0kUlTwf9oZE',
                 watch: 'https://youtu.be/0kUlTwf9oZE?si=CzpxcoU6qOlDcogd',
               },
+              'palamu': {
+                embed: 'https://www.youtube.com/embed/K3CxFSEi8XM',
+                watch: 'https://youtu.be/K3CxFSEi8XM',
+              },
+              'palamu-fort': {
+                embed: 'https://www.youtube.com/embed/K3CxFSEi8XM',
+                watch: 'https://youtu.be/K3CxFSEi8XM',
+              },
+              'palamu-forts': {
+                embed: 'https://www.youtube.com/embed/K3CxFSEi8XM',
+                watch: 'https://youtu.be/K3CxFSEi8XM',
+              },
             };
 
-            const exactVideo = Object.entries(MONUMENT_EXACT_VIDEOS).find(([key]) =>
-              item.id === key || item.id.includes(key)
-            )?.[1];
+            const normalizedId = (item.id || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            const normalizedTitle = (item.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+            const exactVideo = Object.entries(MONUMENT_EXACT_VIDEOS).find(([key]) => {
+              const k = key.toLowerCase();
+              return (
+                normalizedId === k ||
+                (k.length > 4 && normalizedId.includes(k)) ||
+                normalizedTitle === k ||
+                (k.length > 4 && normalizedTitle.includes(k)) ||
+                (normalizedTitle.length > 4 && k.includes(normalizedTitle))
+              );
+            })?.[1];
 
             // Filter out any obsolete/broken listType=search URLs
             const validRawUrl = (item.video_url && !item.video_url.includes('listType=search')) ? item.video_url : '';
             const autoTour = getAuthenticVirtualTourUrl(item.title, item.location_name, exactVideo?.embed || validRawUrl);
 
-            const embedUrl = exactVideo?.embed || autoTour.embedUrl;
+            const finalEmbedUrl = exactVideo?.embed || autoTour.embedUrl;
             const watchUrl = exactVideo?.watch || autoTour.watchUrl;
 
             return (
@@ -1644,24 +1690,96 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                     <ExternalLink className="w-3 h-3 ml-0.5" />
                   </a>
                 </div>
-                <div className="relative aspect-video w-full rounded-xl overflow-hidden border border-white/10 bg-black shadow-lg">
-                  {!isVideoLoaded && (
-                    <div className="absolute inset-0 z-10">
-                      <ModalVideoSkeleton />
+
+                {finalEmbedUrl ? (
+                  <div className="relative aspect-video w-full rounded-xl overflow-hidden border border-white/10 bg-black shadow-lg">
+                    {!isVideoLoaded && (
+                      <div className="absolute inset-0 z-10">
+                        <ModalVideoSkeleton />
+                      </div>
+                    )}
+                    <iframe
+                      src={finalEmbedUrl}
+                      title={`${item.title} Video Tour`}
+                      className={`w-full h-full border-0 transition-opacity duration-500 ${
+                        isVideoLoaded ? 'opacity-100' : 'opacity-0'
+                      }`}
+                      onLoad={() => setIsVideoLoaded(true)}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      referrerPolicy="strict-origin-when-cross-origin"
+                      allowFullScreen
+                    />
+                  </div>
+                ) : (
+                  <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-stone-900/90 via-zinc-900/90 to-black/95 p-6 sm:p-8 text-center space-y-5 shadow-2xl">
+                    {item.image_url && (
+                      <div
+                        className="absolute inset-0 bg-cover bg-center opacity-15 filter blur-sm pointer-events-none"
+                        style={{ backgroundImage: `url(${item.image_url})` }}
+                      />
+                    )}
+                    <div className="relative z-10 space-y-3 max-w-lg mx-auto">
+                      <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-red-600/20 border border-red-500/40 text-red-500 mx-auto shadow-lg shadow-red-900/20">
+                        <Video className="w-7 h-7 text-red-500 fill-red-500/20" />
+                      </div>
+                      <h3 className="text-base sm:text-lg font-serif font-bold text-white tracking-wide">
+                        {lang === 'hi'
+                          ? `${item.title} आधिकारिक वृत्तचित्र एवं वीडियो पुरालेख`
+                          : `${item.title} Official Documentary & Video Archives`}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed font-serif">
+                        {lang === 'hi'
+                          ? 'भारतीय पुरातत्व सर्वेक्षण (ASI), दूरदर्शन (DD India) एवं राज्य पर्यटन विभागों द्वारा निर्मित वृत्तचित्र एवं आभासी अन्वेषण।'
+                          : 'Explore authentic high-definition documentaries, historical coverage, and 360° virtual tours directly on YouTube.'}
+                      </p>
+                      <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                        <a
+                          href={watchUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-glass-clay btn-glass-clay-primary inline-flex items-center justify-center gap-2 px-5 py-2.5 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg w-full sm:w-auto cursor-pointer"
+                        >
+                          <Video className="w-4 h-4 text-red-400" />
+                          <span>{lang === 'hi' ? 'यूट्यूब पर वृत्तचित्र देखें' : 'Watch Documentary on YouTube'}</span>
+                          <ExternalLink className="w-3.5 h-3.5 ml-0.5" />
+                        </a>
+                      </div>
                     </div>
-                  )}
-                  <iframe
-                    src={embedUrl}
-                    title={`${item.title} Video Tour`}
-                    className={`w-full h-full border-0 transition-opacity duration-500 ${
-                      isVideoLoaded ? 'opacity-100' : 'opacity-0'
-                    }`}
-                    onLoad={() => setIsVideoLoaded(true)}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    referrerPolicy="strict-origin-when-cross-origin"
-                    allowFullScreen
-                  />
-                </div>
+
+                    {/* National Heritage Tour Player Option */}
+                    <div className="relative z-10 pt-4 border-t border-white/10 text-left">
+                      <details className="group rounded-xl bg-white/[0.03] border border-white/10 p-3.5 cursor-pointer">
+                        <summary className="text-xs font-semibold text-amber-300 flex items-center justify-between">
+                          <span className="flex items-center gap-2">
+                            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                            <span>
+                              {lang === 'hi'
+                                ? 'राष्ट्रीय विश्व धरोहर वृत्तचित्र देखें (पर्यटन मंत्रालय)'
+                                : 'Watch National World Heritage Tour (Ministry of Tourism)'}
+                            </span>
+                          </span>
+                          <span className="text-[10px] text-zinc-400 group-open:rotate-180 transition-transform">▼</span>
+                        </summary>
+                        <div className="mt-3 aspect-video w-full rounded-lg overflow-hidden border border-white/10 bg-black">
+                          <iframe
+                            src={autoTour.nationalTourEmbed}
+                            title="Incredible India National Heritage Tour"
+                            className="w-full h-full border-0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            referrerPolicy="strict-origin-when-cross-origin"
+                            allowFullScreen
+                          />
+                        </div>
+                        <p className="text-[10px] text-zinc-400 mt-2">
+                          {lang === 'hi'
+                            ? 'नोट: यह भारत की प्रमुख विश्व धरोहरों का सामान्य परिचयात्मक वृत्तचित्र है।'
+                            : 'Note: This is an overarching documentary celebrating the UNESCO World Heritage of India.'}
+                        </p>
+                      </details>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-400">
                   <span>
                     {lang === 'hi'
@@ -1780,31 +1898,34 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                   {/* Auto-Discover Real Archive Photos */}
                   <button
                     type="button"
+                    disabled={isDiscoveringPhotos}
                     onClick={async () => {
+                      if (!item?.id) return;
                       setIsDiscoveringPhotos(true);
                       try {
                         // Search with clean monument title directly for highest accuracy
-                        const photos = await fetchAuthenticHeritagePhotos(item.title, 6);
+                        const photos = await fetchAuthenticHeritagePhotos(item.title, item.location_name, 6);
                         if (photos.length > 0) {
                           setArchivePhotos(photos);
+                          MONUMENT_ARCHIVE_PHOTOS_CACHE.set(item.id, photos);
                           onShowToast(
                             lang === 'hi'
                               ? `🏛️ ${photos.length} प्रामाणिक ऐतिहासिक तस्वीरें खोजी गईं!`
-                              : `🏛️ Found ${photos.length} archive photos!`,
+                              : `🏛️ Found ${photos.length} authentic archive photos!`,
                             'success'
                           );
                         } else {
                           onShowToast(lang === 'hi' ? 'कोई नई तस्वीर नहीं मिली।' : 'No additional archive photos found.', 'info');
                         }
                       } catch {
-                        onShowToast('Could not fetch archive photos.', 'error');
+                        onShowToast(lang === 'hi' ? 'तस्वीरें खोजने में समस्या हुई।' : 'Could not fetch archive photos.', 'error');
                       } finally {
                         setIsDiscoveringPhotos(false);
                       }
                     }}
-                    className="btn-glass-clay btn-glass-clay-secondary inline-flex items-center gap-1.5 px-3 py-1.5 text-amber-300 hover:text-white text-xs font-medium rounded-xl cursor-pointer"
+                    className="btn-glass-clay btn-glass-clay-secondary inline-flex items-center gap-1.5 px-3 py-1.5 text-amber-300 hover:text-white text-xs font-medium rounded-xl cursor-pointer disabled:opacity-50"
                   >
-                    <Sparkles className={`w-3.5 h-3.5 ${isDiscoveringPhotos ? 'animate-spin' : ''}`} />
+                    <Sparkles className={`w-3.5 h-3.5 ${isDiscoveringPhotos ? 'animate-spin text-amber-400' : ''}`} />
                     <span>
                       {isDiscoveringPhotos
                         ? (lang === 'hi' ? 'खोज रहे हैं...' : 'Discovering...')
@@ -1897,13 +2018,23 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                         className="relative aspect-4/3 rounded-xl overflow-hidden border border-white/10 bg-black/60 group cursor-pointer"
                         onClick={() => setLightboxPhoto({ url, caption: `${item.title} Wikimedia Historical Archive` })}
                       >
-                        <img src={url} alt={`${item.title} archive ${i + 1}`} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                        <img
+                          src={url}
+                          alt={`${item.title} archive ${i + 1}`}
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                        />
                         <button
                           type="button"
                           onClick={async (e) => {
                             e.stopPropagation();
                             await handleAddCrowdPhoto(url, `${item.title} Historical Archive`, 'Wikimedia Commons');
-                            setArchivePhotos((prev) => prev.filter((_, idx) => idx !== i));
+                            setArchivePhotos((prev) => {
+                              const updated = prev.filter((_, idx) => idx !== i);
+                              if (item?.id) MONUMENT_ARCHIVE_PHOTOS_CACHE.set(item.id, updated);
+                              return updated;
+                            });
                           }}
                           className="absolute bottom-1.5 right-1.5 btn-glass-clay btn-glass-clay-primary px-2 py-1 text-[10px] text-white rounded-lg cursor-pointer shadow-md opacity-90 hover:opacity-100"
                           title="Save this photo to the monument gallery"

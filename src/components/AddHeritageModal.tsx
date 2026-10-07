@@ -109,11 +109,11 @@ export const AddHeritageModal: React.FC<AddHeritageModalProps> = ({
 
       try {
         // 1. Primary search: Clean title directly (highest precision from Wikipedia & Wikimedia)
-        let photos = await fetchAuthenticHeritagePhotos(cleanName, 6);
+        let photos = await fetchAuthenticHeritagePhotos(cleanName, undefined, 6);
 
         // 2. Fallback: If 0 photos found and city/district entered, try with location context
         if (photos.length === 0 && cityDistrict.trim()) {
-          photos = await fetchAuthenticHeritagePhotos(`${cleanName} ${cityDistrict.trim()}`, 6);
+          photos = await fetchAuthenticHeritagePhotos(cleanName, cityDistrict.trim(), 6);
         }
 
         setAutoPhotos(photos);
@@ -207,7 +207,7 @@ export const AddHeritageModal: React.FC<AddHeritageModalProps> = ({
     const baseLat = selectedState?.lat || 26.9124;
     const baseLng = selectedState?.lng || 75.7873;
 
-    // Automatically curate authentic virtual tour YouTube documentary
+    // Automatically curate authentic virtual tour YouTube documentary if a verified match exists
     const virtualTour = getAuthenticVirtualTourUrl(cleanTitle, fullLocation);
 
     try {
@@ -222,7 +222,7 @@ export const AddHeritageModal: React.FC<AddHeritageModalProps> = ({
         history: cleanHighlight ? `Highlight: ${cleanHighlight}. ${cleanStory}` : cleanStory,
         culture: cleanStory,
         image_url: previewImgSrc,
-        video_url: virtualTour.embedUrl,
+        video_url: virtualTour.hasExactVideo && virtualTour.embedUrl ? virtualTour.embedUrl : '',
         timings: '08:00 AM - 06:00 PM',
         best_time: 'October to March',
         unesco_flag: false,
