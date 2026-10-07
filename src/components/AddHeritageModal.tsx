@@ -382,11 +382,10 @@ export const AddHeritageModal: React.FC<AddHeritageModalProps> = ({
                   type="button"
                   key={er}
                   onClick={() => setPeriod(er)}
-                  className={`px-3 py-1.5 rounded-xl font-medium cursor-pointer transition-all ${
-                    period === er
-                      ? 'bg-amber-500 text-stone-950 font-bold shadow-sm'
-                      : 'bg-stone-100 dark:bg-white/[0.04] text-stone-600 dark:text-zinc-400 hover:text-stone-900 dark:hover:text-white border border-stone-200 dark:border-white/10'
-                  }`}
+                  className={`px-3 py-1.5 rounded-xl font-medium cursor-pointer transition-all ${period === er
+                    ? 'bg-amber-500 text-stone-950 font-bold shadow-sm'
+                    : 'bg-stone-100 dark:bg-white/[0.04] text-stone-600 dark:text-zinc-400 hover:text-stone-900 dark:hover:text-white border border-stone-200 dark:border-white/10'
+                    }`}
                 >
                   {er} Era
                 </button>
@@ -476,11 +475,10 @@ export const AddHeritageModal: React.FC<AddHeritageModalProps> = ({
                       key={photoUrl}
                       type="button"
                       onClick={() => setActivePhotoIdx(idx)}
-                      className={`relative w-14 h-14 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
-                        activePhotoIdx === idx
-                          ? 'border-amber-400 scale-105 shadow-md ring-2 ring-amber-400/30'
-                          : 'border-white/10 opacity-70 hover:opacity-100'
-                      }`}
+                      className={`relative w-14 h-14 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${activePhotoIdx === idx
+                        ? 'border-amber-400 scale-105 shadow-md ring-2 ring-amber-400/30'
+                        : 'border-white/10 opacity-70 hover:opacity-100'
+                        }`}
                     >
                       <img src={photoUrl} alt="" className="w-full h-full object-cover" />
                       {activePhotoIdx === idx && (
@@ -565,8 +563,8 @@ export const AddHeritageModal: React.FC<AddHeritageModalProps> = ({
                   {customImageUrl
                     ? (lang === 'hi' ? '📸 आपकी अपनी अपलोड की गई फोटो' : '📸 Custom photo attached')
                     : autoPhotos.length > 0
-                    ? (lang === 'hi' ? '✓ विकिमीडिया से प्रामाणिक फोटो सुरक्षित' : '✓ Verified Wikimedia photo attached')
-                    : (lang === 'hi' ? '🎨 विशिष्ट सांस्कृतिक पहचान बैज' : '🎨 Dedicated cultural card generated')}
+                      ? (lang === 'hi' ? '✓ विकिमीडिया से प्रामाणिक फोटो सुरक्षित' : '✓ Verified Wikimedia photo attached')
+                      : (lang === 'hi' ? '🎨 विशिष्ट सांस्कृतिक पहचान बैज' : '🎨 Dedicated cultural card generated')}
                 </span>
               </span>
             </div>
