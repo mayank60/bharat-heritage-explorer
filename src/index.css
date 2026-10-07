@@ -68,7 +68,6 @@ html.dark .border-\[\#2C2926\] {
 
   .overscroll-contain {
     overscroll-behavior: contain !important;
-    -webkit-overflow-scrolling: touch !important;
   }
 
   h1, h2, h3, .font-serif {
@@ -160,6 +159,7 @@ html:not(.dark) [class*="bg-\[\#e0231c\]"] .text-white {
   font-family: inherit;
   font-weight: 600;
   cursor: pointer;
+  -webkit-user-select: none;
   user-select: none;
   border: 1px solid rgba(255, 255, 255, 0.18);
   transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease, background-color 0.15s ease;
@@ -261,10 +261,11 @@ html:not(.dark) .btn-glass-clay-secondary:hover {
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
+  -webkit-user-select: none;
   user-select: none;
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.1);
@@ -317,10 +318,11 @@ html:not(.dark) .btn-glass-clay-icon:hover {
 .btn-glass-clay-tab {
   position: relative;
   border-radius: 0.75rem;
-  backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
+  -webkit-user-select: none;
   user-select: none;
   font-weight: 600;
   text-decoration: none;
