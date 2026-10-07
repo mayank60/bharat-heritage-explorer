@@ -3,7 +3,7 @@
  * High-performance offline caching, asset fallbacks, and instant boot without network
  */
 
-const CACHE_VERSION = 'bharat-heritage-v4';
+const CACHE_VERSION = 'bharat-heritage-v5';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 const IMAGE_CACHE = `${CACHE_VERSION}-images`;
@@ -13,7 +13,6 @@ const CORE_PRECACHE_URLS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/src/assets/images/monument_konark-sun-temple.jpg',
 ];
 
 // Install: Precache App Shell + Discover Dynamic Asset Chunks
@@ -178,8 +177,14 @@ self.addEventListener('fetch', (event) => {
             return networkResponse;
           })
           .catch(async () => {
-            // Fallback to local monument photo on image load failure while offline
-            return caches.match('/src/assets/images/monument_konark-sun-temple.jpg');
+            // Return a clean vector architectural SVG placeholder response instead of hardcoding Konark Temple
+            const svgPlaceholder = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#181513"/><stop offset="100%" stop-color="#0c0a10"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/><circle cx="300" cy="180" r="80" fill="#c9a24a" opacity="0.12"/><path d="M260 260 L300 140 L340 260 Z" fill="#c9a24a" opacity="0.85"/><circle cx="300" cy="135" r="5" fill="#ff5a3c"/><text x="300" y="300" font-family="Georgia,serif" font-size="16" font-weight="bold" fill="#FAF8F5" text-anchor="middle">BHARAT HERITAGE ARCHIVE</text><text x="300" y="325" font-family="sans-serif" font-size="12" fill="#d97706" text-anchor="middle">Offline Sanctuary Mode Active</text></svg>`;
+            return new Response(svgPlaceholder, {
+              headers: {
+                'Content-Type': 'image/svg+xml;charset=UTF-8',
+                'Cache-Control': 'no-cache',
+              },
+            });
           });
       })
     );

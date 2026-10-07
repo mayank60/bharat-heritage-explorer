@@ -86,6 +86,9 @@ export async function cacheHeritageDataOffline(
       tx.onerror = () => reject(tx.error);
     });
 
+    // Background pre-cache real images into Cache API for 100% offline availability
+    precacheHeritageImages(items).catch(() => {});
+
     return {
       success: true,
       itemCount: items.length,
@@ -264,6 +267,40 @@ export async function removeOutboxActionOffline(id: string): Promise<void> {
     tx.objectStore(STORE_OUTBOX).delete(id);
   } catch (err) {
     console.warn('[OfflineDB] Could not remove outbox action from IndexedDB:', err);
+  }
+}
+
+/**
+ * Pre-cache real monument images in background into Cache API so they are 100% available offline
+ */
+export async function precacheHeritageImages(items: HeritageItem[]): Promise<void> {
+  if (typeof window === 'undefined' || !('caches' in window)) return;
+  try {
+    const cache = await caches.open('bharat-heritage-v5-images');
+    const urlsToCache = items
+      .map((it) => it.image_url)
+      .filter((url) => url && typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/')));
+
+    // Batch download in small chunks of 4 concurrent requests to not clog bandwidth
+    const uniqueUrls = [...new Set(urlsToCache)];
+    for (let i = 0; i < uniqueUrls.length; i += 4) {
+      const chunk = uniqueUrls.slice(i, i + 4);
+      await Promise.allSettled(
+        chunk.map(async (u) => {
+          const matched = await cache.match(u);
+          if (!matched) {
+            try {
+              const res = await fetch(u, { mode: 'no-cors' });
+              if (res) await cache.put(u, res);
+            } catch {
+              // ignore offline network failures
+            }
+          }
+        })
+      );
+    }
+  } catch (err) {
+    console.warn('[OfflineStorage] precacheHeritageImages partial error:', err);
   }
 }
 

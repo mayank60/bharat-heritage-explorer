@@ -524,33 +524,34 @@ export async function fetchMonumentPhotos(monumentId: string): Promise<MonumentP
     } catch { /* ignore */ }
   }
 
-  // B. Server API
+  // B. Server API (Only parse if real JSON response)
   try {
     const res = await fetch(`/api/heritage/${encodeURIComponent(cleanId)}/photos`);
-    if (res.ok) {
+    const contentType = res.headers.get('content-type') || '';
+    if (res.ok && contentType.includes('application/json')) {
       const data = await res.json();
       if (data.success && Array.isArray(data.photos)) {
         try {
           localStorage.setItem(cacheKey, JSON.stringify(data.photos));
-        } catch { /* ignore */ }
+        } catch { /* ignore quota */ }
         return data.photos;
       }
     }
   } catch { /* ignore */ }
 
-  // C. Local Cache & IndexedDB Fallback
+  // C. Local Cache & IndexedDB Fallback (Instant offline & community photos)
+  try {
+    const idbCached = await getOfflineMonumentPhotos(cleanId);
+    if (Array.isArray(idbCached) && idbCached.length > 0) {
+      return idbCached;
+    }
+  } catch { /* ignore */ }
+
   try {
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
       const parsed = JSON.parse(cached);
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch { /* ignore */ }
-
-  try {
-    const idbCached = await getOfflineMonumentPhotos(cleanId);
-    if (Array.isArray(idbCached) && idbCached.length > 0) {
-      return idbCached;
     }
   } catch { /* ignore */ }
 
@@ -580,7 +581,40 @@ export async function addMonumentPhoto(params: {
     verified: true,
   };
 
-  // 1. Supabase insert
+  // 1. Guaranteed offline-first persistence in IndexedDB (Unlimited quota)
+  try {
+    await saveMonumentPhotoOffline(photo);
+  } catch (err) {
+    console.warn('[CloudDB] IndexedDB photo save warning:', err);
+  }
+
+  // 2. Local storage cache (with quota protection)
+  const cacheKey = `monument_photos_${cleanMonumentId}`;
+  let updatedList: MonumentPhoto[] = [photo];
+  try {
+    const existing = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+    updatedList = [photo, ...existing.filter((p: MonumentPhoto) => p.id !== id)];
+    localStorage.setItem(cacheKey, JSON.stringify(updatedList));
+  } catch {
+    // If localStorage quota exceeded, we already safely persisted to IndexedDB!
+  }
+
+  // 3. Broadcast to all active listeners immediately so UI updates in real-time
+  try {
+    if (broadcastChannel) {
+      broadcastChannel.postMessage({
+        type: 'MONUMENT_PHOTOS_UPDATED',
+        payload: { monumentId: cleanMonumentId, photos: updatedList },
+      });
+    }
+
+    const listeners = photoListeners.get(cleanMonumentId);
+    if (listeners) {
+      listeners.forEach((fn) => fn(updatedList));
+    }
+  } catch { /* ignore */ }
+
+  // 4. Background Supabase Sync (if configured)
   let supabaseSuccess = false;
   if (supabase) {
     try {
@@ -601,7 +635,7 @@ export async function addMonumentPhoto(params: {
     }
   }
 
-  // 2. Server API insert
+  // 5. Background Server API Sync
   let serverSuccess = false;
   try {
     const res = await fetch(`/api/heritage/${encodeURIComponent(cleanMonumentId)}/photos`, {
@@ -609,38 +643,16 @@ export async function addMonumentPhoto(params: {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(photo),
     });
-    if (res.ok) serverSuccess = true;
+    const contentType = res.headers.get('content-type') || '';
+    if (res.ok && contentType.includes('application/json')) serverSuccess = true;
   } catch (err) {
     console.warn('[CloudDB] Server photo API insert error:', err);
   }
 
-  // If cloud targets failed or offline, queue to outbox!
+  // If cloud targets failed or offline, queue to outbox for later sync
   if (!supabaseSuccess && !serverSuccess) {
     queueOfflineAction('add_photo', photo);
   }
-
-  // 3. Update local cache & broadcast (localStorage + IndexedDB)
-  try {
-    const cacheKey = `monument_photos_${cleanMonumentId}`;
-    const existing = JSON.parse(localStorage.getItem(cacheKey) || '[]');
-    const updated = [photo, ...existing.filter((p: MonumentPhoto) => p.id !== id)];
-    localStorage.setItem(cacheKey, JSON.stringify(updated));
-
-    // Also persist to IndexedDB
-    saveMonumentPhotoOffline(photo).catch(() => {});
-
-    if (broadcastChannel) {
-      broadcastChannel.postMessage({
-        type: 'MONUMENT_PHOTOS_UPDATED',
-        payload: { monumentId: cleanMonumentId, photos: updated },
-      });
-    }
-
-    const listeners = photoListeners.get(cleanMonumentId);
-    if (listeners) {
-      listeners.forEach((fn) => fn(updated));
-    }
-  } catch { /* ignore */ }
 
   return photo;
 }

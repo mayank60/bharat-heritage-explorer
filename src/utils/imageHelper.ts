@@ -24,8 +24,10 @@ const ONLINE_FALLBACKS: Record<string, string> = {
   'jaisalmer-fort': 'https://images.unsplash.com/photo-1582560475093-ba66accbc424?auto=format&fit=crop&w=1000&q=80',
 };
 
+import { generateDynamicMonumentSvg } from './authenticMediaHelper.ts';
+
 const CATEGORY_DEFAULT_IMAGES: Record<string, string> = {
-  monuments: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=1000&q=80',
+  temples: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1000&q=80',
   forts: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1000&q=80',
   festivals: 'https://images.unsplash.com/photo-1608889175123-8ee362201f81?auto=format&fit=crop&w=1000&q=80',
   traditions: 'https://images.unsplash.com/photo-1532375810709-75b1da00537c?auto=format&fit=crop&w=1000&q=80',
@@ -34,9 +36,6 @@ const CATEGORY_DEFAULT_IMAGES: Record<string, string> = {
   food: 'https://images.unsplash.com/photo-1589302168068-964664d93dc0?auto=format&fit=crop&w=1000&q=80',
 };
 
-const DEFAULT_ARCHITECTURAL_FALLBACK =
-  'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=1000&q=80';
-
 // Bulletproof SVG data URI that renders 100% offline even without internet access
 export const OFFLINE_SVG_HERITAGE =
   "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='500' viewBox='0 0 800 500'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23181412'/%3E%3Cstop offset='60%25' stop-color='%232a130f'/%3E%3Cstop offset='100%25' stop-color='%230f0d14'/%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23g)'/%3E%3Ccircle cx='400' cy='210' r='110' fill='%23e0231c' opacity='0.18'/%3E%3Cpath d='M350 330 L400 170 L450 330 Z M380 170 L400 110 L420 170 Z' fill='%23c9a24a' opacity='0.85'/%3E%3Ccircle cx='400' cy='105' r='6' fill='%23ff5a3c'/%3E%3Ctext x='400' y='375' font-family='Georgia,serif' font-size='22' font-weight='bold' fill='%23FAF8F5' text-anchor='middle'%3EBHARAT HERITAGE%3C/text%3E%3Ctext x='400' y='405' font-family='sans-serif' font-size='12' font-weight='500' fill='%23c9a24a' text-anchor='middle'%3ENational Living Cultural Archive%3C/text%3E%3C/svg%3E";
@@ -44,9 +43,9 @@ export const OFFLINE_SVG_HERITAGE =
 /**
  * Normalizes image URLs for local file:// protocol vs web server http://
  */
-export function getHeritageImageUrl(url?: string, itemId?: string, categoryId?: string): string {
+export function getHeritageImageUrl(url?: string, itemId?: string, categoryId?: string, title?: string): string {
   if (!url || typeof url !== 'string' || url.trim() === '' || url === 'undefined' || url === 'null') {
-    return getFallbackImage(itemId, categoryId);
+    return getFallbackImage(itemId, categoryId, title);
   }
 
   // Handle local file:// protocol on Windows/Mac
@@ -60,9 +59,10 @@ export function getHeritageImageUrl(url?: string, itemId?: string, categoryId?: 
 }
 
 /**
- * Returns a high-res curated online fallback image, matching specific monuments or categories
+ * Returns a high-res curated online fallback image, matching specific monuments or categories,
+ * or generates a custom dynamic architectural SVG for that monument instead of hardcoding Taj Mahal.
  */
-export function getFallbackImage(itemId?: string, categoryId?: string): string {
+export function getFallbackImage(itemId?: string, categoryId?: string, title?: string): string {
   if (itemId) {
     const lowerId = itemId.toLowerCase();
     for (const [key, fallback] of Object.entries(ONLINE_FALLBACKS)) {
@@ -76,7 +76,9 @@ export function getFallbackImage(itemId?: string, categoryId?: string): string {
     return CATEGORY_DEFAULT_IMAGES[categoryId];
   }
 
-  return DEFAULT_ARCHITECTURAL_FALLBACK;
+  // Generate a personalized cultural SVG specific to this monument name
+  const monumentTitle = title || (itemId ? itemId.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : 'Bharat Heritage');
+  return generateDynamicMonumentSvg(monumentTitle, undefined, 'Living Archive', categoryId);
 }
 
 /**
@@ -136,5 +138,6 @@ export function handleHeritageImageError(
   }
   img.setAttribute('data-tried-svg', 'true');
   img.onerror = null;
-  img.src = OFFLINE_SVG_HERITAGE;
+  const monumentTitle = itemId ? itemId.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : 'Bharat Heritage';
+  img.src = generateDynamicMonumentSvg(monumentTitle, undefined, 'Heritage Site', categoryId);
 }

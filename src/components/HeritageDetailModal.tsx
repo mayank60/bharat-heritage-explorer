@@ -27,6 +27,7 @@ import {
   Sparkles,
   Sliders,
   Globe,
+  Camera,
 } from 'lucide-react';
 import { HeritageItem, MonumentPhoto } from '../types.ts';
 import {
@@ -40,10 +41,11 @@ import {
   getHeritageTitle,
   getHeritageSummary,
   getHeritageHistory,
-  getHeritageCulture
+  getHeritageCulture,
 } from '../data/hindiDescriptions.ts';
 import { LanguageKey, TRANSLATIONS, AVAILABLE_LANGUAGES } from '../i18n.ts';
 import { getHeritageImageUrl, handleHeritageImageError } from '../utils/imageHelper.ts';
+import { fetchAuthenticHeritagePhotos, getAuthenticVirtualTourUrl } from '../utils/authenticMediaHelper.ts';
 import { LazyHeritageImage } from './LazyHeritageImage.tsx';
 import { PARASNATH_PERMANENT_GALLERY } from '../data/parasnathPermanentGallery.ts';
 import { HeritageDossierModal } from './HeritageDossierModal.tsx';
@@ -95,7 +97,7 @@ const compressImage = (file: File): Promise<string> => {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_DIM = 1200;
+        const MAX_DIM = 900;
         let width = img.width;
         let height = img.height;
 
@@ -116,7 +118,7 @@ const compressImage = (file: File): Promise<string> => {
         const ctx = canvas.getContext('2d');
         if (ctx) {
           ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.78));
+          resolve(canvas.toDataURL('image/jpeg', 0.72));
         } else {
           resolve((event.target?.result as string) || '');
         }
@@ -229,6 +231,32 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
   const [isSubmittingPhoto, setIsSubmittingPhoto] = useState(false);
   const [lightboxPhoto, setLightboxPhoto] = useState<{ url: string; caption?: string; contributor?: string } | null>(null);
 
+  // Auto-discovered historical archive photos from Wikimedia Commons
+  const [archivePhotos, setArchivePhotos] = useState<string[]>([]);
+  const [isDiscoveringPhotos, setIsDiscoveringPhotos] = useState(false);
+
+  // Auto-discover authentic archive photos when entering gallery if empty
+  useEffect(() => {
+    if (
+      tab === 'gallery' &&
+      item?.id &&
+      customGallery.length === 0 &&
+      crowdPhotos.length === 0 &&
+      archivePhotos.length === 0 &&
+      !isDiscoveringPhotos
+    ) {
+      setIsDiscoveringPhotos(true);
+      fetchAuthenticHeritagePhotos(`${item.title} ${item.location_name || ''}`, 6)
+        .then((photos) => {
+          if (Array.isArray(photos) && photos.length > 0) {
+            setArchivePhotos(photos);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setIsDiscoveringPhotos(false));
+    }
+  }, [tab, item?.id, customGallery.length, crowdPhotos.length, archivePhotos.length, isDiscoveringPhotos]);
+
   // Sync crowdsourced monument photos in real-time
   useEffect(() => {
     if (!item?.id) return;
@@ -248,31 +276,19 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
   const handleAddCrowdPhoto = async (imageUrl: string, caption?: string, contributor?: string) => {
     if (!item?.id || !imageUrl.trim()) return;
 
-    // Anti-spam cooldown check (15 seconds between photo contributions)
-    const rateCheck = checkSubmissionRateLimit('photo_submit', 15);
-    if (!rateCheck.allowed) {
-      onShowToast(
-        lang === 'hi'
-          ? `स्पैम सुरक्षा: कृपया दूसरी फोटो जोड़ने से पहले ${rateCheck.remainingSeconds} सेकंड प्रतीक्षा करें।`
-          : `Anti-spam cooldown: Please wait ${rateCheck.remainingSeconds}s before contributing another photo.`,
-        'info'
-      );
-      return;
-    }
-
     setIsSubmittingPhoto(true);
     try {
       const newP = await addMonumentPhoto({
         monument_id: item.id,
         image_url: imageUrl.trim(),
-        caption: caption?.trim(),
+        caption: caption?.trim() || undefined,
         contributor_name: contributor?.trim() || (lang === 'hi' ? 'धरोहर यात्री' : 'Heritage Explorer'),
       });
       setCrowdPhotos((prev) => [newP, ...prev.filter((p) => p.id !== newP.id)]);
       onShowToast(
         lang === 'hi'
-          ? '📸 आपकी फोटो जन-गैलरी में सफलतापूर्वक जोड़ दी गई!'
-          : '📸 Your photo was published to the public gallery!',
+          ? '📸 फोटो जन-गैलरी में सफलतापूर्वक जोड़ दी गई!'
+          : '📸 Photo added to gallery successfully!',
         'success'
       );
       setShowPhotoModal(false);
@@ -1604,8 +1620,14 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
               item.id === key || item.id.includes(key)
             )?.[1];
 
-            let embedUrl = exactVideo?.embed || item.video_url || 'https://www.youtube.com/embed/5a34uA7dIug';
+            let embedUrl = exactVideo?.embed || item.video_url;
             let watchUrl = exactVideo?.watch || '';
+
+            if (!embedUrl) {
+              const autoTour = getAuthenticVirtualTourUrl(item.title, item.location_name);
+              embedUrl = autoTour.embedUrl;
+              watchUrl = autoTour.watchUrl;
+            }
 
             if (!watchUrl) {
               if (embedUrl.includes('youtu.be/')) {
@@ -1725,28 +1747,87 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setShowPhotoModal(!showPhotoModal)}
-                  className="btn-glass-clay btn-glass-clay-primary inline-flex items-center gap-1.5 px-3.5 py-1.5 text-white text-xs font-semibold rounded-xl cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>{lang === 'hi' ? 'फोटो योगदान करें' : 'Contribute Photo'}</span>
-                </button>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Direct 1-Tap Photo Upload from Device/Camera (No typing required!) */}
+                  <label className="btn-glass-clay btn-glass-clay-primary inline-flex items-center gap-1.5 px-3.5 py-1.5 text-white text-xs font-semibold rounded-xl cursor-pointer shadow-md">
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>{lang === 'hi' ? 'फोटो जोड़ें' : 'Add Photo'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const f = e.target.files?.[0];
+                        if (!f) return;
+                        onShowToast(lang === 'hi' ? 'फोटो जोड़ी जा रही है...' : 'Adding photo...', 'info');
+                        const compressed = await compressImage(f);
+                        if (compressed) {
+                          await handleAddCrowdPhoto(compressed);
+                        }
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+
+                  {/* Auto-Discover Real Archive Photos */}
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setIsDiscoveringPhotos(true);
+                      try {
+                        const photos = await fetchAuthenticHeritagePhotos(`${item.title} ${item.location_name || ''}`, 6);
+                        if (photos.length > 0) {
+                          setArchivePhotos(photos);
+                          onShowToast(
+                            lang === 'hi'
+                              ? `🏛️ ${photos.length} प्रामाणिक ऐतिहासिक तस्वीरें खोजी गईं!`
+                              : `🏛️ Found ${photos.length} archive photos!`,
+                            'success'
+                          );
+                        } else {
+                          onShowToast(lang === 'hi' ? 'कोई नई तस्वीर नहीं मिली।' : 'No additional archive photos found.', 'info');
+                        }
+                      } catch {
+                        onShowToast('Could not fetch archive photos.', 'error');
+                      } finally {
+                        setIsDiscoveringPhotos(false);
+                      }
+                    }}
+                    className="btn-glass-clay btn-glass-clay-secondary inline-flex items-center gap-1.5 px-3 py-1.5 text-amber-300 hover:text-white text-xs font-medium rounded-xl cursor-pointer"
+                  >
+                    <Sparkles className={`w-3.5 h-3.5 ${isDiscoveringPhotos ? 'animate-spin' : ''}`} />
+                    <span>
+                      {isDiscoveringPhotos
+                        ? (lang === 'hi' ? 'खोज रहे हैं...' : 'Discovering...')
+                        : (lang === 'hi' ? 'पुरालेख फोटो खोजें' : 'Discover Archive Photos')}
+                    </span>
+                  </button>
+
+                  {/* Optional Caption / Link details toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setShowPhotoModal(!showPhotoModal)}
+                    className="text-zinc-400 hover:text-white text-xs px-2 py-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+                    title="Add custom caption or link"
+                  >
+                    {showPhotoModal ? '✕' : `+ ${lang === 'hi' ? 'विवरण / लिंक' : 'Link / Caption'}`}
+                  </button>
+                </div>
               </div>
 
-              {/* Photo Contribution Drawer / Form */}
+              {/* Optional Caption / URL Drawer for users who want custom descriptions */}
               {showPhotoModal && (
                 <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/15 space-y-3 animate-in fade-in zoom-in-95 duration-150">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
                       <ImageIcon className="w-4 h-4" />
-                      <span>{lang === 'hi' ? 'स्मारक के लिए फोटो साझा करें' : 'Share Photo for this Monument'}</span>
+                      <span>{lang === 'hi' ? 'फोटो शीर्षक या वेब लिंक जोड़ें' : 'Add Photo Link or Custom Caption'}</span>
                     </span>
                     <button
                       type="button"
                       onClick={() => setShowPhotoModal(false)}
-                      className="text-zinc-400 hover:text-white p-1"
+                      className="text-zinc-400 hover:text-white p-1 cursor-pointer"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -1757,14 +1838,14 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                       type="text"
                       value={contributorNameInput}
                       onChange={(e) => setContributorNameInput(e.target.value)}
-                      placeholder={lang === 'hi' ? 'आपका नाम (उदा. राहुल वर्मा)' : 'Your Name (e.g. Rahul Verma)'}
+                      placeholder={lang === 'hi' ? 'आपका नाम (वैकल्पिक)' : 'Your Name (Optional)'}
                       className="px-3 py-2 rounded-xl text-xs bg-black/40 border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500"
                     />
                     <input
                       type="text"
                       value={captionInput}
                       onChange={(e) => setCaptionInput(e.target.value)}
-                      placeholder={lang === 'hi' ? 'शीर्षक / विवरण (वैकल्पिक)' : 'Photo Caption / View (Optional)'}
+                      placeholder={lang === 'hi' ? 'शीर्षक / विवरण (वैकल्पिक)' : 'Photo Caption (Optional)'}
                       className="px-3 py-2 rounded-xl text-xs bg-black/40 border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500"
                     />
                   </div>
@@ -1777,42 +1858,58 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                       placeholder={lang === 'hi' ? 'वेब इमेज लिंक (HTTPS URL)...' : 'Paste Image Web Link (HTTPS URL)...'}
                       className="w-full sm:flex-1 px-3 py-2 rounded-xl text-xs bg-black/40 border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500"
                     />
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                      <label className="btn-glass-clay btn-glass-clay-secondary px-3 py-2 text-xs font-medium text-zinc-300 rounded-xl cursor-pointer flex-1 sm:flex-initial text-center justify-center flex items-center gap-1.5">
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>{lang === 'hi' ? 'डिवाइस से चुनें' : 'Choose File'}</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={async (e) => {
-                            const f = e.target.files?.[0];
-                            if (!f) return;
-                            onShowToast(lang === 'hi' ? 'फोटो ऑप्टिमाइज़ हो रही है...' : 'Compressing photo...', 'info');
-                            const compressed = await compressImage(f);
-                            if (compressed) {
-                              handleAddCrowdPhoto(compressed, captionInput, contributorNameInput);
-                            }
-                            e.target.value = '';
-                          }}
-                        />
-                      </label>
+                    <button
+                      type="button"
+                      disabled={!photoUrlInput.trim() || isSubmittingPhoto}
+                      onClick={() => handleAddCrowdPhoto(photoUrlInput, captionInput, contributorNameInput)}
+                      className="btn-glass-clay btn-glass-clay-primary px-4 py-2 text-xs font-bold text-white rounded-xl cursor-pointer disabled:opacity-40 w-full sm:w-auto"
+                    >
+                      {isSubmittingPhoto ? 'Saving...' : (lang === 'hi' ? 'जोड़ें' : 'Publish')}
+                    </button>
+                  </div>
+                </div>
+              )}
 
-                      <button
-                        type="button"
-                        disabled={!photoUrlInput.trim() || isSubmittingPhoto}
-                        onClick={() => handleAddCrowdPhoto(photoUrlInput, captionInput, contributorNameInput)}
-                        className="btn-glass-clay btn-glass-clay-primary px-3.5 py-2 text-xs font-bold text-white rounded-xl cursor-pointer disabled:opacity-40"
+              {/* Discovered Wikimedia Archive Photos Section if available */}
+              {archivePhotos.length > 0 && (
+                <div className="p-3.5 rounded-2xl bg-amber-500/5 border border-amber-500/30 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                      <span>{lang === 'hi' ? 'विकिमीडिया ऐतिहासिक पुरालेख तस्वीरें' : 'Discovered Wikimedia Archive Photos'}</span>
+                    </span>
+                    <span className="text-[10px] text-zinc-400">
+                      {archivePhotos.length} {lang === 'hi' ? 'तस्वीरें उपलब्ध' : 'photos found'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    {archivePhotos.map((url, i) => (
+                      <div
+                        key={i}
+                        className="relative aspect-4/3 rounded-xl overflow-hidden border border-white/10 bg-black/60 group cursor-pointer"
+                        onClick={() => setLightboxPhoto({ url, caption: `${item.title} Wikimedia Historical Archive` })}
                       >
-                        {isSubmittingPhoto ? 'Saving...' : (lang === 'hi' ? 'अपलोड करें' : 'Publish')}
-                      </button>
-                    </div>
+                        <img src={url} alt={`${item.title} archive ${i + 1}`} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                        <button
+                          type="button"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            await handleAddCrowdPhoto(url, `${item.title} Historical Archive`, 'Wikimedia Commons');
+                            setArchivePhotos((prev) => prev.filter((_, idx) => idx !== i));
+                          }}
+                          className="absolute bottom-1.5 right-1.5 btn-glass-clay btn-glass-clay-primary px-2 py-1 text-[10px] text-white rounded-lg cursor-pointer shadow-md opacity-90 hover:opacity-100"
+                          title="Save this photo to the monument gallery"
+                        >
+                          + {lang === 'hi' ? 'गैलरी में रखें' : 'Save'}
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
 
               {/* Combined Gallery Grid */}
-              {customGallery.length === 0 && crowdPhotos.length === 0 ? (
+              {customGallery.length === 0 && crowdPhotos.length === 0 && archivePhotos.length === 0 ? (
                 <div className="py-12 px-4 text-center rounded-xl bg-white/[0.02] border border-dashed border-white/10">
                   <ImageIcon className="w-10 h-10 text-zinc-500 mx-auto mb-3 opacity-60" />
                   <p className="text-sm font-medium text-zinc-300">
@@ -1820,12 +1917,12 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                   </p>
                   <p className="text-xs text-zinc-500 mt-1 max-w-sm mx-auto">
                     {lang === 'hi'
-                      ? 'ऊपर दिए गए "फोटो योगदान करें" बटन से आप अपनी नई तस्वीरें जोड़ सकते हैं।'
-                      : 'You can upload photos anytime using the "Contribute Photo" button above.'}
+                      ? 'ऊपर दिए गए "फोटो जोड़ें" बटन से तुरंत अपने फोन से तस्वीर अपलोड करें या "पुरालेख फोटो खोजें" दबाएं।'
+                      : 'Upload directly from your phone camera or click "Discover Archive Photos" above.'}
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   {/* 1. Crowdsourced Contributed Photos */}
                   {crowdPhotos.map((photo) => (
                     <div
@@ -1910,31 +2007,33 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                 </div>
               )}
 
-              {/* Fullscreen Photo Lightbox Preview */}
+              {/* Fullscreen Photo Lightbox Preview (Mobile-Safe, Never Overflows) */}
               {lightboxPhoto && (
                 <div
-                  className="fixed inset-0 z-60 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
+                  className="fixed inset-0 z-60 bg-black/95 backdrop-blur-md flex items-center justify-center p-2 sm:p-4"
                   onClick={() => setLightboxPhoto(null)}
                 >
                   <div
-                    className="relative max-w-4xl max-h-[90vh] bg-[#0c1015] rounded-2xl overflow-hidden border border-white/20 shadow-2xl flex flex-col"
+                    className="relative w-full max-w-3xl max-h-[86vh] bg-[#0c1015] rounded-2xl overflow-hidden border border-white/20 shadow-2xl flex flex-col mx-auto"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
                       type="button"
                       onClick={() => setLightboxPhoto(null)}
-                      className="absolute top-3 right-3 z-20 btn-glass-clay btn-glass-clay-icon w-8 h-8 rounded-full text-white cursor-pointer bg-black/70"
+                      className="absolute top-3 right-3 z-30 btn-glass-clay btn-glass-clay-icon w-8 h-8 rounded-full text-white cursor-pointer bg-black/80 hover:bg-black"
                     >
                       <X className="w-4 h-4" />
                     </button>
-                    <img
-                      src={lightboxPhoto.url}
-                      alt={lightboxPhoto.caption || item.title}
-                      className="max-h-[75vh] w-auto object-contain mx-auto"
-                    />
+                    <div className="flex-1 min-h-0 flex items-center justify-center p-2 sm:p-4 bg-black/50 overflow-hidden">
+                      <img
+                        src={lightboxPhoto.url}
+                        alt={lightboxPhoto.caption || item.title}
+                        className="max-h-[60vh] sm:max-h-[70vh] max-w-full w-auto object-contain rounded-lg"
+                      />
+                    </div>
                     {(lightboxPhoto.caption || lightboxPhoto.contributor) && (
-                      <div className="p-3.5 bg-black/80 border-t border-white/10 text-left">
-                        {lightboxPhoto.caption && <p className="text-xs font-semibold text-white">{lightboxPhoto.caption}</p>}
+                      <div className="p-3 sm:p-3.5 bg-black/90 border-t border-white/10 text-left shrink-0">
+                        {lightboxPhoto.caption && <p className="text-xs font-semibold text-white truncate sm:text-clip">{lightboxPhoto.caption}</p>}
                         {lightboxPhoto.contributor && (
                           <p className="text-[11px] text-amber-400 mt-0.5">
                             {lang === 'hi' ? `योगदानकर्ता: ${lightboxPhoto.contributor}` : `Contributed by: ${lightboxPhoto.contributor}`}

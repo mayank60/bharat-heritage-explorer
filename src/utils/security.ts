@@ -50,21 +50,25 @@ export function sanitizeSearchQuery(query: unknown): string {
 }
 
 // 3. Image URL & Media Validator (Strict HTTPS or Valid base64 Image)
-export function sanitizeImageUrl(url: unknown, fallback = '/src/assets/images/monument_konark-sun-temple.jpg'): string {
-  if (typeof url !== 'string' || !url.trim()) return fallback;
+export function sanitizeImageUrl(url: unknown, fallback?: string): string {
+  const safeFallback = fallback || '';
+  if (typeof url !== 'string' || !url.trim()) return safeFallback;
   const cleanUrl = url.trim();
 
   // Allow local root or assets paths
   if (cleanUrl.startsWith('/') || cleanUrl.startsWith('./')) {
     // Prevent directory traversal
-    if (cleanUrl.includes('..')) return fallback;
+    if (cleanUrl.includes('..')) return safeFallback;
     return cleanUrl;
   }
 
   // Allow base64 data URLs for compressed photos
   if (cleanUrl.startsWith('data:image/')) {
-    const isSafeDataImage = /^data:image\/(jpeg|png|webp|jpg|gif|svg\+xml);base64,[A-Za-z0-9+/=]+$/i.test(cleanUrl);
-    return isSafeDataImage ? cleanUrl : fallback;
+    // Fast, safe check for base64 or encoded SVG images without catastrophic backtracking
+    if (cleanUrl.includes(';base64,') || cleanUrl.startsWith('data:image/svg+xml')) {
+      return cleanUrl;
+    }
+    return safeFallback;
   }
 
   // Enforce secure HTTPS for external URLs (Unsplash, Wikimedia, etc.)
@@ -78,10 +82,10 @@ export function sanitizeImageUrl(url: unknown, fallback = '/src/assets/images/mo
       return parsed.toString().replace(/^http:/, 'https:');
     }
   } catch {
-    return fallback;
+    return safeFallback;
   }
 
-  return fallback;
+  return safeFallback;
 }
 
 // 4. Object Sanitizer (Recursively sanitizes all string fields)
