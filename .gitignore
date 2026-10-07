@@ -1,0 +1,21 @@
+node_modules/
+dist/
+build/
+coverage/
+.DS_Store
+*.log
+# Local Environment & Secrets (NEVER push to Git)
+.env
+.env.local
+.env.*.local
+.env*
+!.env.example
+
+# Cache & Dependencies
+# Local Databases & Backups (Prevent Data Leakage)
+backend/*.db
+backend/*.db-wal
+backend/*.db-shm
+*.sqlite
+*.sqlite3
+*.db

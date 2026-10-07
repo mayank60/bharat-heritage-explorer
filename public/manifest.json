@@ -1,0 +1,39 @@
+{
+  "name": "Bharat Heritage Explorer | भारत धरोहर दर्शन",
+  "short_name": "Bharat Heritage",
+  "description": "Interactive Indian cultural heritage platform with 36 States & UTs exploration, curated UNESCO monuments, living traditions, art & crafts, and community repository.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#121110",
+  "theme_color": "#5C1D16",
+  "categories": ["education", "travel", "culture", "history"],
+  "lang": "en-IN",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/src/assets/images/monument_konark-sun-temple.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Explore States",
+      "short_name": "States",
+      "description": "Explore all 36 States and Union Territories",
+      "url": "/#states",
+      "icons": [{ "src": "/src/assets/images/monument_konark-sun-temple.jpg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Contribute Heritage",
+      "short_name": "Add Heritage",
+      "description": "Contribute new monuments and cultural traditions",
+      "url": "/#contribute",
+      "icons": [{ "src": "/src/assets/images/monument_konark-sun-temple.jpg", "sizes": "192x192" }]
+    }
+  ]
+}

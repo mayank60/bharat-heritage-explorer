@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Primary SEO Meta Tags -->
+    <title>Bharat Heritage Explorer | 36 States &amp; UTs Cultural Sanctuary (SIH 26197)</title>
+    <meta name="title" content="Bharat Heritage Explorer | 36 States &amp; UTs Cultural Sanctuary (SIH 26197)" />
+    <meta name="description" content="Discover India's magnificent cultural tapestry across 36 States and UTs. Explore UNESCO World Heritage monuments, classical epigraphy, Living Traditions, regional cuisine, folk arts, and community contributions in an offline-first sanctuary." />
+    <meta name="keywords" content="Bharat Heritage Explorer, Indian Heritage, UNESCO World Heritage India, SIH 26197, Smart India Hackathon, ASI Archaeological Survey of India, Indian Culture, Temples, Forts, Khajuraho, Hampi, Ajanta Caves, Ellora, Taj Mahal, Living Traditions, Indian Monuments, PWA Sanctuary" />
+    <meta name="author" content="Bharat Heritage Explorer Team (SIH 26197)" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <link rel="canonical" href="https://bharat-heritage-explorer.vercel.app/" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Bharat Heritage Explorer" />
+    <meta property="og:url" content="https://bharat-heritage-explorer.vercel.app/" />
+    <meta property="og:title" content="Bharat Heritage Explorer | 36 States &amp; UTs Cultural Sanctuary" />
+    <meta property="og:description" content="Immersive interactive Indian cultural heritage portal. Curated monuments, time-travel timeline, acoustic soundscapes, and crowdsourced photo contributions." />
+    <meta property="og:image" content="/src/assets/images/monument_konark-sun-temple.jpg" />
+    <meta property="og:image:alt" content="Bharat Heritage Explorer Emblem" />
+    <meta property="og:locale" content="en_IN" />
+    <meta property="og:locale:alternate" content="hi_IN" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Bharat Heritage Explorer | 36 States &amp; UTs Cultural Sanctuary" />
+    <meta name="twitter:description" content="Explore India's sacred monuments, temple architecture, and living traditions. Built for Smart India Hackathon 2024-2026." />
+    <meta name="twitter:image" content="/src/assets/images/monument_konark-sun-temple.jpg" />
+
+    <!-- Enterprise-Grade Content Security Policy & Referrer -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https: https://*.unsplash.com https://*.wikimedia.org; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com; connect-src 'self' https: wss:; media-src 'self' data: blob: https:; object-src 'none'; base-uri 'self';" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+    <!-- Progressive Web App (PWA) & Mobile Optimization -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Bharat Heritage" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>" />
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>" />
+
+    <!-- Theme script to prevent FOUC & set adaptive theme-color -->
+    <script>
+      try {
+        const savedTheme = localStorage.getItem('bharat_heritage_dark');
+        const isDark = savedTheme !== 'false';
+        if (!isDark) {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.style.colorScheme = 'light';
+        } else {
+          document.documentElement.classList.add('dark');
+          document.documentElement.style.colorScheme = 'dark';
+        }
+        const metaTheme = document.createElement('meta');
+        metaTheme.name = 'theme-color';
+        metaTheme.content = isDark ? '#0b0908' : '#5C1D16';
+        document.head.appendChild(metaTheme);
+      } catch (e) {
+        document.documentElement.classList.add('dark');
+      }
+    </script>
+
+    <!-- Schema.org JSON-LD Structured Data for Google Knowledge Graph & Rich Snippets -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Bharat Heritage Explorer",
+      "alternateName": "भारत धरोहर दर्शन",
+      "url": "https://bharat-heritage-explorer.vercel.app/",
+      "applicationCategory": "EducationalApplication",
+      "genre": "Cultural Heritage & History",
+      "operatingSystem": "All (Web, Android, iOS, Windows, macOS)",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "INR"
+      },
+      "description": "Comprehensive national heritage platform featuring 36 Indian states and union territories, UNESCO world heritage sites, living traditions, and ASI administrative archives.",
+      "author": {
+        "@type": "Organization",
+        "name": "Bharat Heritage Explorer (SIH 26197)"
+      }
+    }
+    </script>
+
+    <!-- Typography: Cinzel (Display) & Plus Jakarta Sans (Prose) & Yatra One -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Yatra+One&display=swap" rel="stylesheet">
+  </head>
+  <body class="bg-[#FAF8F5] dark:bg-[#121110] text-[#1C1917] dark:text-[#EDE8E1] antialiased selection:bg-[#F3E8D7] selection:text-[#5C1D16]">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
