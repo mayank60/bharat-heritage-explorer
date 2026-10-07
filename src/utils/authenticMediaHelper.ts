@@ -5,10 +5,6 @@
 const PHOTO_CACHE = new Map<string, string[]>();
 
 /**
- * Searches Wikipedia and Wikimedia Commons for authentic, high-res historical photographs.
- * Filters out logos, maps, coats of arms, flags, and SVGs to ensure real site photos.
- */
-/**
  * Curated, verified embeddable YouTube documentaries from official Incredible India & Ministry of Tourism channels.
  * These are guaranteed to allow iframe embedding on web applications without Error 153!
  */
