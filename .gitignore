@@ -11,6 +11,9 @@ coverage/
 
 # Personal documentation & notes (private reference)
 website info/
+ai/
+.vscode/
+VS_CODE_GUIDE.md
 
 # Cache & Dependencies
 # Local Databases & Backups (Prevent Data Leakage)
