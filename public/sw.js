@@ -3,7 +3,7 @@
  * High-performance offline caching, asset fallbacks, and instant boot without network
  */
 
-const CACHE_VERSION = 'bharat-heritage-v5';
+const CACHE_VERSION = 'bharat-heritage-v6';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 const IMAGE_CACHE = `${CACHE_VERSION}-images`;
@@ -13,6 +13,14 @@ const CORE_PRECACHE_URLS = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/favicon.ico',
+  '/favicon.svg',
+  '/favicon-32x32.png',
+  '/favicon-16x16.png',
+  '/apple-touch-icon.png',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/logo.png',
 ];
 
 // Install: Precache App Shell + Discover Dynamic Asset Chunks

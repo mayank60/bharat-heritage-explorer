@@ -14,9 +14,15 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/src/assets/images/monument_konark-sun-temple.jpg",
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],
@@ -26,14 +32,14 @@
       "short_name": "States",
       "description": "Explore all 36 States and Union Territories",
       "url": "/#states",
-      "icons": [{ "src": "/src/assets/images/monument_konark-sun-temple.jpg", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Contribute Heritage",
       "short_name": "Add Heritage",
       "description": "Contribute new monuments and cultural traditions",
       "url": "/#contribute",
-      "icons": [{ "src": "/src/assets/images/monument_konark-sun-temple.jpg", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }
