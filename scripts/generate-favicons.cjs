@@ -5,10 +5,12 @@ const path = require('path');
 const publicDir = path.resolve(__dirname, '../public');
 const srcAssetsDir = path.resolve(__dirname, '../src/assets');
 
+// Dedicated source file that this generator script never writes to
+const dedicatedSourcePath = path.resolve(srcAssetsDir, 'logo-source.jpg');
+
 const candidatePaths = [
   process.env.LOGO_SOURCE,
-  path.resolve(publicDir, 'logo.png'),
-  path.resolve(srcAssetsDir, 'logo.png'),
+  dedicatedSourcePath,
 ].filter(Boolean);
 
 const srcPath = candidatePaths.find((p) => fs.existsSync(p));
