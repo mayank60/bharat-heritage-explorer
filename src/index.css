@@ -627,28 +627,24 @@ html:not(.dark) .btn-glass-clay-crimson:hover {
 
 .animate-cinematic-aura {
   animation: cinematicAuraBloom 2s cubic-bezier(0.19, 1, 0.22, 1) both;
-  will-change: transform, opacity;
   backface-visibility: hidden;
   transform: translateZ(0);
 }
 
 .animate-cinematic-badge {
   animation: cinematicGlideUp 1s cubic-bezier(0.19, 1, 0.22, 1) 0.15s both;
-  will-change: transform, opacity;
   backface-visibility: hidden;
   transform: translateZ(0);
 }
 
 .animate-cinematic-title {
   animation: cinematicTitleFlow 1.2s cubic-bezier(0.19, 1, 0.22, 1) 0.3s both;
-  will-change: transform, opacity;
   backface-visibility: hidden;
   transform: translateZ(0);
 }
 
 .animate-cinematic-subtitle {
   animation: cinematicGlideUp 1.05s cubic-bezier(0.19, 1, 0.22, 1) 0.48s both;
-  will-change: transform, opacity;
   backface-visibility: hidden;
   transform: translateZ(0);
 }
@@ -903,12 +899,14 @@ html:not(.dark) .animate-heritage-shimmer {
 
 .card-slide-item {
   opacity: 0;
+  contain: layout style;
   animation: cardSlideEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   animation-delay: calc(var(--stagger-index, 0) * 30ms);
 }
 
 .card-horizontal-slide {
   opacity: 0;
+  contain: layout style;
   animation: horizontalPillSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   animation-delay: calc(var(--stagger-index, 0) * 20ms);
 }
@@ -920,6 +918,7 @@ html:not(.dark) .animate-heritage-shimmer {
 .card-interactive-slide {
   content-visibility: auto;
   contain-intrinsic-size: 1px 360px;
+  transform: translateZ(0);
   transition: transform 0.25s ease,
               box-shadow 0.25s ease,
               border-color 0.2s ease,

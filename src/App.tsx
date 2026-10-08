@@ -3,13 +3,15 @@ import { ArrowUp } from 'lucide-react';
 import { Navbar } from './components/Navbar.tsx';
 import { KageLandingPage } from './components/KageLandingPage.tsx';
 import { StateCategoryExplorer, ThingToSeeCategory } from './components/StateCategoryExplorer.tsx';
-import { StateSidePanel } from './components/StateSidePanel.tsx';
-import { HeritageDetailModal } from './components/HeritageDetailModal.tsx';
-import { SavedDrawer } from './components/SavedDrawer.tsx';
-import { AdminModal } from './components/AdminModal.tsx';
-import { AddHeritageModal } from './components/AddHeritageModal.tsx';
-import { UserLoginModal } from './components/UserLoginModal.tsx';
 import { LoginGateway } from './components/LoginGateway.tsx';
+
+// Code-split heavy modals and drawers with React.lazy to radically compress initial JavaScript load
+const StateSidePanel = React.lazy(() => import('./components/StateSidePanel.tsx').then((m) => ({ default: m.StateSidePanel })));
+const HeritageDetailModal = React.lazy(() => import('./components/HeritageDetailModal.tsx').then((m) => ({ default: m.HeritageDetailModal })));
+const SavedDrawer = React.lazy(() => import('./components/SavedDrawer.tsx').then((m) => ({ default: m.SavedDrawer })));
+const AdminModal = React.lazy(() => import('./components/AdminModal.tsx').then((m) => ({ default: m.AdminModal })));
+const AddHeritageModal = React.lazy(() => import('./components/AddHeritageModal.tsx').then((m) => ({ default: m.AddHeritageModal })));
+const UserLoginModal = React.lazy(() => import('./components/UserLoginModal.tsx').then((m) => ({ default: m.UserLoginModal })));
 import { OfflineSanctuaryBanner } from './components/OfflineSanctuaryBanner.tsx';
 import { Toast, ToastMessage } from './components/Toast.tsx';
 import { State, Category, HeritageItem, SearchSuggestion, UserSession } from './types.ts';
@@ -381,14 +383,21 @@ export default function App() {
     localStorage.setItem('bharat_heritage_lang', lang);
   }, [lang]);
 
-  // Back to Top scroll listener (appears when scrolled past hero section)
+  // Back to Top scroll listener (rAF-throttled for high refresh rate 120Hz smoothness)
   const [showBackToTop, setShowBackToTop] = useState(false);
 
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      const heroEl = document.getElementById('hero');
-      const threshold = heroEl ? Math.max(heroEl.offsetHeight * 0.75, 360) : 400;
-      setShowBackToTop(window.scrollY > threshold);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const heroEl = document.getElementById('hero');
+          const threshold = heroEl ? Math.max(heroEl.offsetHeight * 0.75, 360) : 400;
+          setShowBackToTop(window.scrollY > threshold);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -804,70 +813,94 @@ export default function App() {
       </main>
 
       {/* State Cultural Details Slide Panel */}
-      <StateSidePanel
-        lang={lang}
-        stateId={inspectingStateId}
-        onClose={() => setInspectingStateId(null)}
-        onSelectHeritageItem={(item) => setActiveHeritageItem(item)}
-      />
+      {inspectingStateId && (
+        <React.Suspense fallback={null}>
+          <StateSidePanel
+            lang={lang}
+            stateId={inspectingStateId}
+            onClose={() => setInspectingStateId(null)}
+            onSelectHeritageItem={(item) => setActiveHeritageItem(item)}
+          />
+        </React.Suspense>
+      )}
 
       {/* Heritage Detail Full Modal */}
-      <HeritageDetailModal
-        lang={lang}
-        item={activeHeritageItem}
-        allItems={heritageItems}
-        onClose={() => setActiveHeritageItem(null)}
-        isSaved={activeHeritageItem ? savedIds.has(activeHeritageItem.id) : false}
-        onToggleSave={(id) => handleToggleSave(id)}
-        onShowToast={showToast}
-        onSelectRecommendedItem={(rec) => setActiveHeritageItem(rec)}
-      />
+      {activeHeritageItem && (
+        <React.Suspense fallback={null}>
+          <HeritageDetailModal
+            lang={lang}
+            item={activeHeritageItem}
+            allItems={heritageItems}
+            onClose={() => setActiveHeritageItem(null)}
+            isSaved={savedIds.has(activeHeritageItem.id)}
+            onToggleSave={(id) => handleToggleSave(id)}
+            onShowToast={showToast}
+            onSelectRecommendedItem={(rec) => setActiveHeritageItem(rec)}
+          />
+        </React.Suspense>
+      )}
 
       {/* Saved Bookmarks Drawer */}
-      <SavedDrawer
-        lang={lang}
-        isOpen={isSavedDrawerOpen}
-        onClose={() => setIsSavedDrawerOpen(false)}
-        savedItems={savedItems}
-        onRemoveSaved={(id) => handleToggleSave(id)}
-        onSelectItem={(item) => setActiveHeritageItem(item)}
-      />
+      {isSavedDrawerOpen && (
+        <React.Suspense fallback={null}>
+          <SavedDrawer
+            lang={lang}
+            isOpen={isSavedDrawerOpen}
+            onClose={() => setIsSavedDrawerOpen(false)}
+            savedItems={savedItems}
+            onRemoveSaved={(id) => handleToggleSave(id)}
+            onSelectItem={(item) => setActiveHeritageItem(item)}
+          />
+        </React.Suspense>
+      )}
 
-      {/* Public Heritage Submission Modal - Open for All Users (No Password Required) */}
-      <AddHeritageModal
-        isOpen={isContributeModalOpen}
-        onClose={() => setIsContributeModalOpen(false)}
-        states={states}
-        categories={categories}
-        onHeritageAdded={handleHeritageAdded}
-        lang={lang}
-      />
+      {/* Public Heritage Submission Modal - Open for All Users */}
+      {isContributeModalOpen && (
+        <React.Suspense fallback={null}>
+          <AddHeritageModal
+            isOpen={isContributeModalOpen}
+            onClose={() => setIsContributeModalOpen(false)}
+            states={states}
+            categories={categories}
+            onHeritageAdded={handleHeritageAdded}
+            lang={lang}
+          />
+        </React.Suspense>
+      )}
 
-      {/* ASI Admin Portal - Restricted for Site Owner / Admin (Protected with asi@bharat) */}
-      <AdminModal
-        isOpen={isAdminModalOpen}
-        onClose={() => setIsAdminModalOpen(false)}
-        lang={lang}
-        totalStatesCount={states.length}
-        totalHeritageCount={heritageItems.length}
-        onOpenContribute={() => setIsContributeModalOpen(true)}
-        liveUsers={allUsers}
-        onRefreshLogs={fetchLiveUsers}
-        communityItems={heritageItems.filter((h) => h.is_community)}
-        onDeleteCommunityItem={handleHeritageDeleted}
-      />
+      {/* ASI Admin Portal - Restricted for Site Owner / Admin */}
+      {isAdminModalOpen && (
+        <React.Suspense fallback={null}>
+          <AdminModal
+            isOpen={isAdminModalOpen}
+            onClose={() => setIsAdminModalOpen(false)}
+            lang={lang}
+            totalStatesCount={states.length}
+            totalHeritageCount={heritageItems.length}
+            onOpenContribute={() => setIsContributeModalOpen(true)}
+            liveUsers={allUsers}
+            onRefreshLogs={fetchLiveUsers}
+            communityItems={heritageItems.filter((h) => h.is_community)}
+            onDeleteCommunityItem={handleHeritageDeleted}
+          />
+        </React.Suspense>
+      )}
 
       {/* User Login & SQLite Database Session Modal */}
-      <UserLoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        currentUser={currentUser}
-        onLoginSuccess={handleLoginSuccess}
-        onLogout={handleLogout}
-        onToast={showToast}
-        allUsers={allUsers}
-        onRefreshUsers={fetchLiveUsers}
-      />
+      {isLoginModalOpen && (
+        <React.Suspense fallback={null}>
+          <UserLoginModal
+            isOpen={isLoginModalOpen}
+            onClose={() => setIsLoginModalOpen(false)}
+            currentUser={currentUser}
+            onLoginSuccess={handleLoginSuccess}
+            onLogout={handleLogout}
+            onToast={showToast}
+            allUsers={allUsers}
+            onRefreshUsers={fetchLiveUsers}
+          />
+        </React.Suspense>
+      )}
 
       {/* Toast Notification Container */}
       <Toast toasts={toasts} onDismiss={dismissToast} />

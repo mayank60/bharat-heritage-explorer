@@ -171,15 +171,15 @@ export const KageLandingPage: React.FC<KageLandingPageProps> = ({
       id="hero"
       className={`relative overflow-hidden bg-[#faf7f2] dark:bg-[#05070a] text-stone-900 dark:text-[#dfe7e0] pt-12 sm:pt-16 pb-16 sm:pb-20 border-b border-stone-200 dark:border-white/[0.08] transition-colors w-full max-w-full min-w-0 ${className}`}
     >
-      {/* Ambient Temple Light Glows (Cinematic Aura Bloom) */}
-      <div className="animate-cinematic-aura absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[340px] bg-gradient-to-b from-[#e0231c]/10 dark:from-[#e0231c]/15 via-[#9333EA]/5 dark:via-[#9333EA]/10 to-transparent blur-3xl pointer-events-none transform-gpu" />
-      <div className="animate-cinematic-aura absolute -top-24 -left-24 w-80 h-80 bg-[#c9a24a]/15 dark:bg-[#c9a24a]/10 rounded-full blur-3xl pointer-events-none transform-gpu" />
-      <div className="animate-cinematic-aura absolute -bottom-24 -right-24 w-80 h-80 bg-[#e0231c]/10 rounded-full blur-3xl pointer-events-none transform-gpu" />
+      {/* Ambient Temple Light Glows (Cinematic Aura Bloom - GPU optimized) */}
+      <div className="animate-cinematic-aura absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gradient-to-b from-[#e0231c]/10 dark:from-[#e0231c]/15 via-[#9333EA]/5 dark:via-[#9333EA]/10 to-transparent blur-2xl pointer-events-none transform-gpu" />
+      <div className="absolute -top-24 -left-24 w-72 h-72 bg-[#c9a24a]/12 dark:bg-[#c9a24a]/10 rounded-full blur-2xl pointer-events-none transform-gpu" />
+      <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-[#e0231c]/10 rounded-full blur-2xl pointer-events-none transform-gpu" />
 
       <div className="max-w-7xl mx-auto px-3 xs:px-4 sm:px-6 lg:px-8 relative z-10 text-center w-full min-w-0 overflow-visible">
         {/* Curatorial Heritage Pill Badge */}
         <div className="animate-cinematic-badge flex items-center justify-center mb-5 sm:mb-6 w-full max-w-full min-w-0 px-2">
-          <div className="group relative inline-flex items-center justify-center gap-1 xs:gap-1.5 px-2.5 xs:px-4 py-1.5 rounded-full text-[10.5px] xs:text-xs font-medium text-stone-800 dark:text-zinc-200 bg-white/50 dark:bg-white/[0.07] hover:bg-white/70 dark:hover:bg-white/[0.12] border border-white/60 dark:border-white/20 backdrop-blur-2xl transition-all duration-300 hover:scale-[1.02] cursor-default shadow-[0_8px_24px_rgba(0,0,0,0.06),inset_0_1px_1.5px_rgba(255,255,255,0.85)] dark:shadow-[0_8px_28px_rgba(0,0,0,0.45),0_0_16px_rgba(224,35,28,0.12),inset_0_1px_1px_rgba(255,255,255,0.28)] overflow-hidden max-w-full">
+          <div className="group relative inline-flex items-center justify-center gap-1 xs:gap-1.5 px-2.5 xs:px-4 py-1.5 rounded-full text-[10.5px] xs:text-xs font-medium text-stone-800 dark:text-zinc-200 bg-white/50 dark:bg-white/[0.07] hover:bg-white/70 dark:hover:bg-white/[0.12] border border-white/60 dark:border-white/20 backdrop-blur-md transition-all duration-300 hover:scale-[1.02] cursor-default shadow-[0_8px_24px_rgba(0,0,0,0.06),inset_0_1px_1.5px_rgba(255,255,255,0.85)] dark:shadow-[0_8px_28px_rgba(0,0,0,0.45),0_0_16px_rgba(224,35,28,0.12),inset_0_1px_1px_rgba(255,255,255,0.28)] overflow-hidden max-w-full">
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 dark:via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none rounded-full" />
 
             <span className="flex h-2 w-2 xs:h-2.5 xs:w-2.5 relative shrink-0">
@@ -227,7 +227,7 @@ export const KageLandingPage: React.FC<KageLandingPageProps> = ({
                     });
                   }
                 }}
-                className="relative flex items-center justify-between gap-2 xs:gap-3 p-2.5 xs:p-3 sm:px-4.5 sm:py-3 rounded-2xl bg-white/95 dark:bg-[#090d12]/95 border-2 border-amber-500/40 dark:border-amber-400/30 backdrop-blur-2xl shadow-[0_8px_28px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.7)] group-hover:border-[#c9a24a] group-hover:shadow-[0_0_30px_rgba(201,162,74,0.35)] cursor-pointer transition-all duration-300 text-left w-full max-w-full overflow-visible"
+                className="relative flex items-center justify-between gap-2 xs:gap-3 p-2.5 xs:p-3 sm:px-4.5 sm:py-3 rounded-2xl bg-white/95 dark:bg-[#090d12]/95 border-2 border-amber-500/40 dark:border-amber-400/30 backdrop-blur-md shadow-[0_8px_28px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.7)] group-hover:border-[#c9a24a] group-hover:shadow-[0_0_30px_rgba(201,162,74,0.35)] cursor-pointer transition-all duration-300 text-left w-full max-w-full overflow-visible"
               >
                 <div className="flex items-center gap-2.5 xs:gap-3.5 min-w-0 flex-1">
                   <div className="relative w-8 h-8 xs:w-9 xs:h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-amber-500/25 via-[#e0231c]/20 to-purple-500/20 border border-amber-500/50 dark:border-amber-400/40 text-amber-500 flex items-center justify-center shrink-0 shadow-[0_0_14px_rgba(245,158,11,0.35)] group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(224,35,28,0.5)] transition-all duration-300">
@@ -289,7 +289,7 @@ export const KageLandingPage: React.FC<KageLandingPageProps> = ({
           <div className="relative group">
             <div className="absolute -inset-1 bg-gradient-to-r from-[#e0231c]/35 via-[#c9a24a]/40 to-[#9333EA]/35 rounded-[22px] blur-lg opacity-40 group-focus-within:opacity-100 group-hover:opacity-75 transition-all duration-500 pointer-events-none" />
 
-            <div className="relative flex items-center bg-white/95 dark:bg-[#070a0e]/95 border-2 border-stone-200 dark:border-white/15 rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.08)] dark:shadow-[0_16px_48px_rgba(0,0,0,0.7)] group-focus-within:border-[#c9a24a] group-focus-within:shadow-[0_0_32px_rgba(201,162,74,0.35),0_0_48px_rgba(224,35,28,0.25)] transition-all duration-300 backdrop-blur-2xl">
+            <div className="relative flex items-center bg-white/95 dark:bg-[#070a0e]/95 border-2 border-stone-200 dark:border-white/15 rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.08)] dark:shadow-[0_16px_48px_rgba(0,0,0,0.7)] group-focus-within:border-[#c9a24a] group-focus-within:shadow-[0_0_32px_rgba(201,162,74,0.35),0_0_48px_rgba(224,35,28,0.25)] transition-all duration-300 backdrop-blur-md">
               <div className="pl-3.5 xs:pl-4 pr-2 flex items-center justify-center shrink-0">
                 <div className="relative w-8 h-8 xs:w-9 xs:h-9 rounded-xl bg-gradient-to-br from-[#e0231c]/15 via-[#c9a24a]/25 to-[#9333EA]/15 border border-[#c9a24a]/50 text-[#c9a24a] flex items-center justify-center shadow-inner group-focus-within:border-[#e0231c] group-focus-within:shadow-[0_0_14px_rgba(224,35,28,0.5)] group-focus-within:scale-105 transition-all duration-300">
                   <Compass className="w-4 h-4 xs:w-4.5 xs:h-4.5 text-[#e0231c] dark:text-[#ff5a3c] animate-pulse group-focus-within:rotate-45 transition-transform duration-500" />
@@ -356,7 +356,7 @@ export const KageLandingPage: React.FC<KageLandingPageProps> = ({
 
           {/* Autocomplete Suggestions Dropdown */}
           {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-3 bg-white/95 dark:bg-[#0a0e12]/98 border-2 border-amber-500/30 dark:border-white/20 rounded-2xl shadow-[0_24px_60px_rgba(0,0,0,0.25)] dark:shadow-[0_28px_70px_rgba(0,0,0,0.85)] overflow-hidden z-50 text-left backdrop-blur-2xl animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="absolute top-full left-0 right-0 mt-3 bg-white/95 dark:bg-[#0a0e12]/98 border-2 border-amber-500/30 dark:border-white/20 rounded-2xl shadow-[0_24px_60px_rgba(0,0,0,0.25)] dark:shadow-[0_28px_70px_rgba(0,0,0,0.85)] overflow-hidden z-50 text-left backdrop-blur-md animate-in fade-in slide-in-from-top-2 duration-150">
               <div className="px-4 py-2.5 bg-stone-100/90 dark:bg-white/[0.04] border-b border-stone-200 dark:border-white/10 text-[11px] font-semibold uppercase tracking-wider text-stone-600 dark:text-zinc-400 flex items-center justify-between">
                 <span>{getUIText('step_2_title', lang)}</span>
                 <span className="text-[10px] text-amber-600 dark:text-amber-400 font-mono font-bold">

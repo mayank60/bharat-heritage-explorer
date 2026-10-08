@@ -11,10 +11,43 @@ export interface LazyHeritageImageProps {
   aspectRatio?: string;
 }
 
+// Shared IntersectionObserver singleton to prevent 100+ observer instances in memory
+const observerCallbacks = new Map<Element, () => void>();
+let sharedObserver: IntersectionObserver | null = null;
+
+function getSharedObserver(): IntersectionObserver | null {
+  if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
+    return null;
+  }
+  if (!sharedObserver) {
+    sharedObserver = new IntersectionObserver(
+      (entries) => {
+        for (let i = 0; i < entries.length; i++) {
+          const entry = entries[i];
+          if (entry.isIntersecting) {
+            const cb = observerCallbacks.get(entry.target);
+            if (cb) {
+              cb();
+              observerCallbacks.delete(entry.target);
+              sharedObserver?.unobserve(entry.target);
+            }
+          }
+        }
+      },
+      {
+        root: null,
+        rootMargin: '300px 0px', // Prefetch 300px before entering viewport for silky 60fps scrolling
+        threshold: 0.01,
+      }
+    );
+  }
+  return sharedObserver;
+}
+
 /**
  * High-performance, IntersectionObserver-based lazy loading image component.
- * Defers network downloads and decoding until the card enters or approaches the viewport (250px rootMargin prefetch).
- * Provides shimmering skeleton placeholders and zero-jank GPU-accelerated opacity fades.
+ * Defers network downloads and decoding until the card enters or approaches the viewport.
+ * Uses a single shared observer to guarantee zero CPU/memory overhead during rapid scrolls.
  */
 export const LazyHeritageImage: React.FC<LazyHeritageImageProps> = React.memo(({
   src,
@@ -31,36 +64,21 @@ export const LazyHeritageImage: React.FC<LazyHeritageImageProps> = React.memo(({
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    // Fallback if SSR or IntersectionObserver is unsupported in the client browser
-    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
+    const target = containerRef.current;
+    if (!target) return;
+
+    const obs = getSharedObserver();
+    if (!obs) {
       setIsVisible(true);
       return;
     }
 
-    const target = containerRef.current;
-    if (!target) return;
-
-    const observer = new IntersectionObserver(
-      (entries, obs) => {
-        for (let i = 0; i < entries.length; i++) {
-          if (entries[i].isIntersecting) {
-            setIsVisible(true);
-            obs.unobserve(target);
-            break;
-          }
-        }
-      },
-      {
-        root: null,
-        rootMargin: '250px 0px', // Prefetch 250px before entering viewport for smooth scrolling
-        threshold: 0.01,
-      }
-    );
-
-    observer.observe(target);
+    observerCallbacks.set(target, () => setIsVisible(true));
+    obs.observe(target);
 
     return () => {
-      observer.disconnect();
+      observerCallbacks.delete(target);
+      obs.unobserve(target);
     };
   }, []);
 

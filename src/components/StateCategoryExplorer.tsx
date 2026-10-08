@@ -73,6 +73,30 @@ const REGION_NAMES_HI: Record<string, string> = {
 
 const REGION_BUTTONS = ['all', 'North', 'South', 'West', 'East', 'Central', 'Northeast', 'Islands'] as const;
 
+// Module-level precomputed state records map (computed once at app start to avoid repeated iteration loops)
+const STATIC_STATE_COUNTS_MAP = (() => {
+  const map = new Map<string, number>();
+  for (const item of HERITAGE_ITEMS) {
+    map.set(item.state_id, (map.get(item.state_id) || 0) + 1);
+  }
+  for (const fest of FESTIVALS) {
+    map.set(fest.state_id, (map.get(fest.state_id) || 0) + 1);
+  }
+  for (const food of FOODS) {
+    map.set(food.state_id, (map.get(food.state_id) || 0) + 1);
+  }
+  for (const lang of LANGUAGES) {
+    map.set(lang.state_id, (map.get(lang.state_id) || 0) + 1);
+  }
+  for (const trad of TRADITIONS) {
+    map.set(trad.state_id, (map.get(trad.state_id) || 0) + 1);
+  }
+  for (const craft of CRAFTS) {
+    map.set(craft.state_id, (map.get(craft.state_id) || 0) + 1);
+  }
+  return map;
+})();
+
 const CATEGORY_TABS: Array<{
   id: ThingToSeeCategory;
   name: string;
@@ -777,11 +801,11 @@ const StateCategoryExplorerComponent: React.FC<StateCategoryExplorerProps> = ({
   const [stateSearch, setStateSearch] = useState<string>('');
   const [speakingLanguageId, setSpeakingLanguageId] = useState<string | null>(null);
 
-  // Progressive rendering for mobile performance (renders initial 24 monuments, loads rest on-demand)
-  const [visibleMonumentCount, setVisibleMonumentCount] = useState(24);
+  // Progressive rendering for mobile performance (renders initial 24 items, loads rest on-demand)
+  const [visibleItemCount, setVisibleItemCount] = useState(24);
 
   useEffect(() => {
-    setVisibleMonumentCount(24);
+    setVisibleItemCount(24);
   }, [selectedStateId, epochFilter, regionFilter, activeCategory]);
 
   // Smooth skeleton transition state during filtering, epoch switching, or category change
@@ -826,26 +850,15 @@ const StateCategoryExplorerComponent: React.FC<StateCategoryExplorerProps> = ({
     });
   }, [states, regionFilter, stateSearch]);
 
-  // Precompute state item counts across all cultural dimensions (monuments, festivals, traditions, crafts, languages, food)
+  // Fast state item counts using precomputed module map
   const stateCountsMap = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const item of HERITAGE_ITEMS) {
-      map.set(item.state_id, (map.get(item.state_id) || 0) + 1);
-    }
-    for (const fest of FESTIVALS) {
-      map.set(fest.state_id, (map.get(fest.state_id) || 0) + 1);
-    }
-    for (const food of FOODS) {
-      map.set(food.state_id, (map.get(food.state_id) || 0) + 1);
-    }
-    for (const lang of LANGUAGES) {
-      map.set(lang.state_id, (map.get(lang.state_id) || 0) + 1);
-    }
-    for (const trad of TRADITIONS) {
-      map.set(trad.state_id, (map.get(trad.state_id) || 0) + 1);
-    }
-    for (const craft of CRAFTS) {
-      map.set(craft.state_id, (map.get(craft.state_id) || 0) + 1);
+    const map = new Map<string, number>(STATIC_STATE_COUNTS_MAP);
+    if (heritageItems && heritageItems.length > 0) {
+      for (const item of heritageItems) {
+        if (item.is_community) {
+          map.set(item.state_id, (map.get(item.state_id) || 0) + 1);
+        }
+      }
     }
     for (const s of states) {
       if (!map.has(s.id) || (map.get(s.id) || 0) < 1) {
@@ -853,7 +866,7 @@ const StateCategoryExplorerComponent: React.FC<StateCategoryExplorerProps> = ({
       }
     }
     return map;
-  }, [states]);
+  }, [heritageItems, states]);
 
   // Selected State Object (O(1) from statesMap)
   const currentState = useMemo(() => {
@@ -1355,7 +1368,7 @@ const StateCategoryExplorerComponent: React.FC<StateCategoryExplorerProps> = ({
               ) : (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                    {stateMonuments.slice(0, visibleMonumentCount).map((item, idx) => (
+                    {stateMonuments.slice(0, visibleItemCount).map((item, idx) => (
                       <MonumentCard
                         key={`${item.id}-${idx}`}
                         item={item}
@@ -1368,17 +1381,17 @@ const StateCategoryExplorerComponent: React.FC<StateCategoryExplorerProps> = ({
                     ))}
                   </div>
 
-                  {stateMonuments.length > visibleMonumentCount && (
+                  {stateMonuments.length > visibleItemCount && (
                     <div className="text-center pt-6 pb-2">
                       <button
                         type="button"
-                        onClick={() => setVisibleMonumentCount((prev) => prev + 24)}
+                        onClick={() => setVisibleItemCount((prev) => prev + 24)}
                         className="btn-glass-clay btn-glass-clay-primary px-6 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold cursor-pointer text-white shadow-lg inline-flex items-center gap-2 hover:scale-105 active:scale-95 transition-all"
                       >
                         <span>
                           {lang === 'hi'
-                            ? `और स्मारक लोड करें (${stateMonuments.length - visibleMonumentCount} शेष)`
-                            : `Load More Monuments (${stateMonuments.length - visibleMonumentCount} remaining)`}
+                            ? `और स्मारक लोड करें (${stateMonuments.length - visibleItemCount} शेष)`
+                            : `Load More Monuments (${stateMonuments.length - visibleItemCount} remaining)`}
                         </span>
                         <ChevronRight className="w-4 h-4" />
                       </button>
@@ -1414,17 +1427,36 @@ const StateCategoryExplorerComponent: React.FC<StateCategoryExplorerProps> = ({
                   )}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-                  {stateFestivals.map((fest, idx) => (
-                    <FestivalCard
-                      key={`${fest.id}-${idx}`}
-                      fest={fest}
-                      stateObj={statesMap.get(fest.state_id)}
-                      lang={lang}
-                      staggerIndex={idx}
-                    />
-                  ))}
-                </div>
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                    {stateFestivals.slice(0, visibleItemCount).map((fest, idx) => (
+                      <FestivalCard
+                        key={`${fest.id}-${idx}`}
+                        fest={fest}
+                        stateObj={statesMap.get(fest.state_id)}
+                        lang={lang}
+                        staggerIndex={idx}
+                      />
+                    ))}
+                  </div>
+
+                  {stateFestivals.length > visibleItemCount && (
+                    <div className="text-center pt-6 pb-2">
+                      <button
+                        type="button"
+                        onClick={() => setVisibleItemCount((prev) => prev + 24)}
+                        className="btn-glass-clay btn-glass-clay-primary px-6 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold cursor-pointer text-white shadow-lg inline-flex items-center gap-2 hover:scale-105 active:scale-95 transition-all"
+                      >
+                        <span>
+                          {lang === 'hi'
+                            ? `और त्योहार लोड करें (${stateFestivals.length - visibleItemCount} शेष)`
+                            : `Load More Festivals (${stateFestivals.length - visibleItemCount} remaining)`}
+                        </span>
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -1608,17 +1640,36 @@ const StateCategoryExplorerComponent: React.FC<StateCategoryExplorerProps> = ({
                   )}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                  {stateFoods.map((food, idx) => (
-                    <FoodCard
-                      key={`${food.id}-${idx}`}
-                      food={food}
-                      stateObj={statesMap.get(food.state_id)}
-                      lang={lang}
-                      staggerIndex={idx}
-                    />
-                  ))}
-                </div>
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                    {stateFoods.slice(0, visibleItemCount).map((food, idx) => (
+                      <FoodCard
+                        key={`${food.id}-${idx}`}
+                        food={food}
+                        stateObj={statesMap.get(food.state_id)}
+                        lang={lang}
+                        staggerIndex={idx}
+                      />
+                    ))}
+                  </div>
+
+                  {stateFoods.length > visibleItemCount && (
+                    <div className="text-center pt-6 pb-2">
+                      <button
+                        type="button"
+                        onClick={() => setVisibleItemCount((prev) => prev + 24)}
+                        className="btn-glass-clay btn-glass-clay-primary px-6 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold cursor-pointer text-white shadow-lg inline-flex items-center gap-2 hover:scale-105 active:scale-95 transition-all"
+                      >
+                        <span>
+                          {lang === 'hi'
+                            ? `और व्यंजन लोड करें (${stateFoods.length - visibleItemCount} शेष)`
+                            : `Load More Cuisines (${stateFoods.length - visibleItemCount} remaining)`}
+                        </span>
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
