@@ -15,7 +15,15 @@ import {
   PlusCircle,
   Eye,
   Check,
-  X
+  X,
+  Award,
+  MapPin,
+  Building2,
+  Crown,
+  Layers,
+  ShieldCheck,
+  UtensilsCrossed,
+  PartyPopper
 } from 'lucide-react';
 import { State, HeritageItem, Food, Festival, Language, Tradition, Craft } from '../types.ts';
 import { LanguageKey, t } from '../i18n.ts';
@@ -233,13 +241,13 @@ const MonumentCard = React.memo<MonumentCardProps>(({
           {/* Top Floating Control Badges */}
           <div className="absolute top-3 left-3 flex items-center gap-1.5 z-10">
             {item.is_community ? (
-              <span className="bg-emerald-600/90 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-300/40 shadow-md flex items-center gap-1">
-                <span>🏛️</span>
+              <span className="bg-emerald-600/90 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-300/40 shadow-md flex items-center gap-1.5">
+                <Landmark className="w-3 h-3 text-white shrink-0" />
                 <span>{lang === 'hi' ? 'जन योगदान' : 'Community'}</span>
               </span>
             ) : item.unesco_flag ? (
-              <span className="bg-amber-500/90 backdrop-blur-md text-stone-950 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-amber-300 shadow-md flex items-center gap-1">
-                <span>★</span>
+              <span className="bg-amber-500/90 backdrop-blur-md text-stone-950 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-amber-300 shadow-md flex items-center gap-1.5">
+                <Award className="w-3 h-3 text-stone-950 shrink-0" />
                 <span>UNESCO</span>
               </span>
             ) : null}
@@ -264,8 +272,8 @@ const MonumentCard = React.memo<MonumentCardProps>(({
 
           {/* Bottom Overlay Location Tag */}
           <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between text-white/95 text-xs z-10">
-            <div className="flex items-center gap-1 truncate text-[11px] font-medium drop-shadow-md">
-              <span className="text-amber-400">📍</span>
+            <div className="flex items-center gap-1.5 truncate text-[11px] font-medium drop-shadow-md">
+              <MapPin className="w-3 h-3 text-amber-400 shrink-0" />
               <span className="truncate">{item.location_name}</span>
             </div>
             <code className="text-[10px] font-mono px-2 py-0.5 rounded bg-black/75 text-amber-300 border border-amber-500/30 shrink-0 font-bold">
@@ -289,7 +297,7 @@ const MonumentCard = React.memo<MonumentCardProps>(({
           <div className="pt-2 border-t border-stone-100 dark:border-white/10 space-y-2 text-xs">
             {/* Architectural Marvel & Engineering Line */}
             <div className="p-2.5 rounded-xl bg-stone-50 dark:bg-white/[0.02] border border-stone-200 dark:border-white/10 flex items-start gap-2">
-              <span className="text-amber-600 dark:text-amber-400 text-sm mt-0.5">🏛️</span>
+              <Building2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
               <div className="min-w-0">
                 <span className="font-bold text-stone-800 dark:text-zinc-200 block text-[10px] uppercase tracking-wider">
                   {lang === 'hi' ? 'स्थापत्य शैली एवं संरचना' : 'Architectural Marvel & Style'}
@@ -328,7 +336,7 @@ const MonumentCard = React.memo<MonumentCardProps>(({
       <div className="px-4 py-3 bg-stone-50 dark:bg-[#06090d] border-t border-stone-200 dark:border-white/[0.08] flex items-center justify-between text-xs text-stone-600 dark:text-zinc-400">
         <span className="font-medium flex items-center gap-1.5 text-stone-500 dark:text-zinc-400">
           <span className={`w-1.5 h-1.5 rounded-full ${item.is_community ? 'bg-blue-500' : 'bg-emerald-500'} animate-pulse`}></span>
-          <span>{item.is_community ? (lang === 'hi' ? '🏛️ नागरिक योगदान प्रविष्टि' : '🏛️ Community Contribution') : (lang === 'hi' ? 'केंद्रीय संरक्षित स्मारक' : 'Centrally Protected ASI Site')}</span>
+          <span>{item.is_community ? (lang === 'hi' ? 'नागरिक योगदान प्रविष्टि' : 'Community Contribution') : (lang === 'hi' ? 'केंद्रीय संरक्षित स्मारक' : 'Centrally Protected ASI Site')}</span>
         </span>
         <span className="font-bold text-[#e0231c] dark:text-[#ff5a3c] group-hover:translate-x-1.5 transition-transform duration-300 flex items-center gap-1 shrink-0">
           <span>{getUIText('details', lang)}</span>
@@ -431,7 +439,7 @@ const FestivalCard = React.memo<FestivalCardProps>(({ fest, stateObj: st, lang, 
         <div className="space-y-2.5 pt-1 text-xs">
           <div className="p-3 rounded-xl bg-amber-500/5 dark:bg-white/[0.02] border border-amber-500/20">
             <span className="font-bold text-amber-800 dark:text-amber-400 block text-[11px] mb-1 flex items-center gap-1.5">
-              <span>🌟</span>
+              <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
               <span>{getUIText('significance_label', lang)}</span>
             </span>
             <p className="text-stone-700 dark:text-zinc-300 leading-relaxed font-normal">
@@ -441,7 +449,7 @@ const FestivalCard = React.memo<FestivalCardProps>(({ fest, stateObj: st, lang, 
 
           <div className="p-3 rounded-xl bg-stone-50 dark:bg-white/[0.02] border border-stone-200 dark:border-white/10">
             <span className="font-bold text-stone-800 dark:text-zinc-200 block text-[11px] mb-1 flex items-center gap-1.5">
-              <span>🎭</span>
+              <PartyPopper className="w-3.5 h-3.5 text-stone-600 dark:text-zinc-400 shrink-0" />
               <span>{getUIText('celebration_label', lang)}</span>
             </span>
             <p className="text-stone-600 dark:text-zinc-400 leading-relaxed font-normal">
@@ -493,7 +501,7 @@ const TraditionCard = React.memo<TraditionCardProps>(({ tradition, stateObj: st,
         <div className="space-y-2.5 pt-1 text-xs">
           <div className="p-3 rounded-xl bg-red-500/5 dark:bg-white/[0.02] border border-red-500/20">
             <span className="font-bold text-red-800 dark:text-red-400 block text-[11px] mb-1 flex items-center gap-1.5">
-              <span>👑</span>
+              <Crown className="w-3.5 h-3.5 text-red-600 dark:text-red-400 shrink-0" />
               <span>{lang === 'hi' ? 'उद्गम एवं परंपरा' : 'Origin & Lineage'} ({tradition.origin})</span>
             </span>
             <p className="text-stone-700 dark:text-zinc-300 leading-relaxed font-normal">
@@ -503,7 +511,7 @@ const TraditionCard = React.memo<TraditionCardProps>(({ tradition, stateObj: st,
 
           <div className="p-3 rounded-xl bg-stone-50 dark:bg-white/[0.02] border border-stone-200 dark:border-white/10">
             <span className="font-bold text-stone-800 dark:text-zinc-200 block text-[11px] mb-1 flex items-center gap-1.5">
-              <span>🎭</span>
+              <Palette className="w-3.5 h-3.5 text-stone-600 dark:text-zinc-400 shrink-0" />
               <span>{lang === 'hi' ? 'वेशभूषा, मुद्राएं एवं वाद्य' : 'Attire, Mudras & Instruments'}</span>
             </span>
             <p className="text-stone-600 dark:text-zinc-400 leading-relaxed font-normal">
@@ -545,7 +553,7 @@ const CraftCard = React.memo<CraftCardProps>(({ craft, stateObj: st, lang, stagg
           </span>
           {craft.gi_tag && (
             <span className="bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-              <span>★</span>
+              <ShieldCheck className="w-3 h-3 text-amber-700 dark:text-amber-300 shrink-0" />
               <span>GI Tagged</span>
             </span>
           )}
@@ -558,7 +566,7 @@ const CraftCard = React.memo<CraftCardProps>(({ craft, stateObj: st, lang, stagg
         <div className="space-y-2.5 pt-1 text-xs">
           <div className="p-3 rounded-xl bg-purple-500/5 dark:bg-white/[0.02] border border-purple-500/20">
             <span className="font-bold text-purple-800 dark:text-purple-400 block text-[11px] mb-1 flex items-center gap-1.5">
-              <span>🪵</span>
+              <Layers className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
               <span>{lang === 'hi' ? 'मूल सामग्री एवं उपकरण' : 'Raw Materials & Medium'}</span>
             </span>
             <p className="text-stone-700 dark:text-zinc-300 leading-relaxed font-normal">
@@ -568,7 +576,7 @@ const CraftCard = React.memo<CraftCardProps>(({ craft, stateObj: st, lang, stagg
 
           <div className="p-3 rounded-xl bg-stone-50 dark:bg-white/[0.02] border border-stone-200 dark:border-white/10">
             <span className="font-bold text-stone-800 dark:text-zinc-200 block text-[11px] mb-1 flex items-center gap-1.5">
-              <span>🧵</span>
+              <Sparkles className="w-3.5 h-3.5 text-stone-600 dark:text-zinc-400 shrink-0" />
               <span>{lang === 'hi' ? 'पारंपरिक शिल्प तकनीक' : 'Ancestral Technique & Craft Lore'}</span>
             </span>
             <p className="text-stone-600 dark:text-zinc-400 leading-relaxed font-normal">
@@ -682,8 +690,8 @@ const FoodCard = React.memo<FoodCardProps>(({ food, stateObj: st, lang, staggerI
     >
       <div>
         <div className="h-28 sm:h-32 w-full bg-gradient-to-br from-[#F5EFE6] via-[#FAF8F5] to-[#EFE8DD] dark:from-[#25221F] dark:via-[#1E1C19] dark:to-[#181614] flex flex-col items-center justify-center p-4 border-b border-[#E5DFD5] dark:border-[#2C2926]">
-          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white dark:bg-[#2A2622] shadow-xs flex items-center justify-center text-xl sm:text-2xl border border-[#E5DDD0] dark:border-[#38332E]">
-            🍲
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white dark:bg-[#2A2622] shadow-xs flex items-center justify-center text-amber-700 dark:text-amber-400 border border-[#E5DDD0] dark:border-[#38332E]">
+            <UtensilsCrossed className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <span className="text-[11px] font-semibold text-[#8B2E24] dark:text-[#E8998D] mt-1.5 sm:mt-2">
             {st ? getStateName(st, lang) : getUIText('all_india_label', lang)} {getUIText('food_heading', lang)}

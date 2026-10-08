@@ -202,7 +202,7 @@ export const LoginGateway: React.FC<LoginGatewayProps> = ({
                   autoFocus
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
-                  placeholder="✨ Enter your name to enter... 🏛️"
+                  placeholder="e.g. Dr. Rajesh Sharma, Priya Patel..."
                   className="w-full pl-10 pr-4 py-3 rounded-xl text-xs sm:text-sm font-normal text-white placeholder-zinc-400/80 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-400/80"
                   style={{
                     backgroundColor: 'rgba(255, 255, 255, 0.06)',

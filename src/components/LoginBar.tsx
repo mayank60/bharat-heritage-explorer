@@ -48,7 +48,7 @@ export const DoorOpen: React.FC<{ className?: string; size?: number }> = ({
   </svg>
 );
 
-// 2. Walking Character with animated natural stride cycle
+// 2. Walking Traveler Icon with clean minimal Lucide stroke aesthetics
 export const WalkingPerson: React.FC<{
   className?: string;
   isWalking?: boolean;
@@ -58,71 +58,40 @@ export const WalkingPerson: React.FC<{
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="1.8"
     strokeLinecap="round"
     strokeLinejoin="round"
     className={`${className} ${direction === 'left' ? 'scale-x-[-1]' : ''}`}
   >
-    {/* Head with subtle natural gait bobbing */}
+    {/* Head with subtle gait motion */}
     <motion.circle
       cx="12"
       cy="4.5"
-      r="2.2"
+      r="2"
       fill="currentColor"
-      animate={isWalking ? { cy: [4.5, 3.9, 4.5, 3.9, 4.5] } : { cy: 4.5 }}
+      animate={isWalking ? { cy: [4.5, 4, 4.5] } : { cy: 4.5 }}
       transition={{ duration: 0.44, repeat: Infinity, ease: 'easeInOut' }}
     />
     {/* Torso */}
-    <path d="M12 6.8v6" />
-    {/* Dynamic swinging arms */}
+    <path d="M12 7v6" />
+    {/* Travel gesture arms */}
+    <path d="M9 10.5l3-1 3 1" />
+    {/* Balanced stride legs */}
     {isWalking ? (
       <>
         <motion.path
-          d="M12 9 L8 12.5"
-          animate={{ d: ['M12 9 L8 12.5', 'M12 9 L15.5 10.5', 'M12 9 L8 12.5'] }}
+          d="M12 13l-2.8 7"
+          animate={{ d: ['M12 13l-2.8 7', 'M12 13l2.8 7', 'M12 13l-2.8 7'] }}
           transition={{ duration: 0.44, repeat: Infinity, ease: 'easeInOut' }}
-          strokeOpacity="0.75"
         />
         <motion.path
-          d="M12 9 L16 11"
-          animate={{ d: ['M12 9 L16 11', 'M12 9 L8.5 12.5', 'M12 9 L16 11'] }}
+          d="M12 13l2.8 7"
+          animate={{ d: ['M12 13l2.8 7', 'M12 13l-2.8 7', 'M12 13l2.8 7'] }}
           transition={{ duration: 0.44, repeat: Infinity, ease: 'easeInOut' }}
         />
       </>
     ) : (
-      <path d="M9.5 10.5l2.5 1 2.5-1" />
-    )}
-    {/* Dynamic alternating stride legs */}
-    {isWalking ? (
-      <>
-        <motion.path
-          d="M12 12.8 L7.5 18.8"
-          animate={{
-            d: [
-              'M12 12.8 L7.5 18.8',
-              'M12 12.8 L11.8 17.5',
-              'M12 12.8 L16.5 18.8',
-              'M12 12.8 L7.5 18.8',
-            ],
-          }}
-          transition={{ duration: 0.44, repeat: Infinity, ease: 'easeInOut' }}
-          strokeOpacity="0.8"
-        />
-        <motion.path
-          d="M12 12.8 L16.5 18.8"
-          animate={{
-            d: [
-              'M12 12.8 L16.5 18.8',
-              'M12 12.8 L11.8 17.5',
-              'M12 12.8 L7.5 18.8',
-              'M12 12.8 L16.5 18.8',
-            ],
-          }}
-          transition={{ duration: 0.44, repeat: Infinity, ease: 'easeInOut' }}
-        />
-      </>
-    ) : (
-      <path d="M10.2 19l1.8-6.2 1.8 6.2" />
+      <path d="M10 20l2-7 2 7" />
     )}
   </svg>
 );

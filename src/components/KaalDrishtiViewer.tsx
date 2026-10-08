@@ -26,8 +26,9 @@ export const KaalDrishtiViewer: React.FC<KaalDrishtiViewerProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-amber-500/25 text-amber-800 dark:text-amber-200 border border-amber-500/40">
-                🏛️ {t('tab_timetravel', lang, undefined, 'Architectural Evolution')}
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-amber-500/25 text-amber-800 dark:text-amber-200 border border-amber-500/40 inline-flex items-center gap-1.5">
+                <Landmark className="w-3 h-3 text-amber-700 dark:text-amber-300" />
+                <span>{t('tab_timetravel', lang, undefined, 'Architectural Evolution')}</span>
               </span>
               <span className="text-[11px] font-mono text-stone-500 dark:text-zinc-400">
                 {data.ancientPeriod}
@@ -45,7 +46,7 @@ export const KaalDrishtiViewer: React.FC<KaalDrishtiViewerProps> = ({
           <div className="flex items-center gap-1 bg-stone-200/80 dark:bg-white/[0.08] p-1 rounded-xl border border-stone-300 dark:border-white/10 text-xs">
             <button
               onClick={() => setActiveTab('both')}
-              className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'both'
                   ? 'bg-amber-500 text-stone-950 shadow-xs'
                   : 'text-stone-600 dark:text-zinc-400 hover:text-stone-900 dark:hover:text-white'
@@ -56,24 +57,24 @@ export const KaalDrishtiViewer: React.FC<KaalDrishtiViewerProps> = ({
             </button>
             <button
               onClick={() => setActiveTab('ancient')}
-              className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'ancient'
                   ? 'bg-amber-500 text-stone-950 shadow-xs'
                   : 'text-stone-600 dark:text-zinc-400 hover:text-stone-900 dark:hover:text-white'
               }`}
             >
-              <span>🏛️</span>
+              <Landmark className="w-3.5 h-3.5" />
               <span>{t('ancient_view', lang, undefined, 'Ancient')}</span>
             </button>
             <button
               onClick={() => setActiveTab('present')}
-              className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'present'
                   ? 'bg-emerald-600 text-white shadow-xs'
                   : 'text-stone-600 dark:text-zinc-400 hover:text-stone-900 dark:hover:text-white'
               }`}
             >
-              <span>🛡️</span>
+              <ShieldCheck className="w-3.5 h-3.5" />
               <span>{t('present_view', lang, undefined, 'Present')}</span>
             </button>
           </div>

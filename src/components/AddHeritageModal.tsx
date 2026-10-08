@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Sparkles, Image as ImageIcon, Check, AlertCircle, ArrowRight, RefreshCw, Upload, Camera } from 'lucide-react';
+import { X, Sparkles, Image as ImageIcon, Check, AlertCircle, ArrowRight, RefreshCw, Upload, Camera, MapPin, Palette } from 'lucide-react';
 import { State, Category, HeritageItem } from '../types.ts';
 import { LanguageKey } from '../i18n.ts';
 import { getHeritageImageUrl, handleHeritageImageError } from '../utils/imageHelper.ts';
@@ -447,8 +447,9 @@ export const AddHeritageModal: React.FC<AddHeritageModalProps> = ({
                 </span>
               ) : autoPhotos.length > 0 && !customImageUrl ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/30">
-                    ✓ {lang === 'hi' ? `विकिमीडिया फोटो (${activePhotoIdx + 1}/${autoPhotos.length})` : `Wikimedia Photo (${activePhotoIdx + 1}/${autoPhotos.length})`}
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/30 inline-flex items-center gap-1">
+                    <Check className="w-2.5 h-2.5 shrink-0" />
+                    <span>{lang === 'hi' ? `विकिमीडिया फोटो (${activePhotoIdx + 1}/${autoPhotos.length})` : `Wikimedia Photo (${activePhotoIdx + 1}/${autoPhotos.length})`}</span>
                   </span>
                   {autoPhotos.length > 1 && (
                     <button
@@ -554,18 +555,27 @@ export const AddHeritageModal: React.FC<AddHeritageModalProps> = ({
               <span className="font-bold text-stone-900 dark:text-white text-xs block truncate">
                 {title || (lang === 'hi' ? 'आपकी नई प्रविष्टि' : 'Your New Heritage Entry')}
               </span>
-              <span className="text-[11px] text-stone-500 dark:text-zinc-400 block truncate">
-                📍 {cityDistrict ? `${cityDistrict}, ` : ''}{states.find((s) => s.id === stateId)?.name || 'India'} · {period} Era
+              <span className="text-[11px] text-stone-500 dark:text-zinc-400 flex items-center gap-1 truncate">
+                <MapPin className="w-3 h-3 text-amber-500 shrink-0" />
+                <span className="truncate">{cityDistrict ? `${cityDistrict}, ` : ''}{states.find((s) => s.id === stateId)?.name || 'India'} · {period} Era</span>
               </span>
-              <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-1">
-                <Check className="w-3 h-3" />
-                <span>
-                  {customImageUrl
-                    ? (lang === 'hi' ? '📸 आपकी अपनी अपलोड की गई फोटो' : '📸 Custom photo attached')
-                    : autoPhotos.length > 0
-                      ? (lang === 'hi' ? '✓ विकिमीडिया से प्रामाणिक फोटो सुरक्षित' : '✓ Verified Wikimedia photo attached')
-                      : (lang === 'hi' ? '🎨 विशिष्ट सांस्कृतिक पहचान बैज' : '🎨 Dedicated cultural card generated')}
-                </span>
+              <span className="inline-flex items-center gap-1.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-1">
+                {customImageUrl ? (
+                  <>
+                    <Camera className="w-3 h-3 shrink-0" />
+                    <span>{lang === 'hi' ? 'आपकी अपनी अपलोड की गई फोटो' : 'Custom photo attached'}</span>
+                  </>
+                ) : autoPhotos.length > 0 ? (
+                  <>
+                    <Check className="w-3 h-3 shrink-0" />
+                    <span>{lang === 'hi' ? 'विकिमीडिया से प्रामाणिक फोटो सुरक्षित' : 'Verified Wikimedia photo attached'}</span>
+                  </>
+                ) : (
+                  <>
+                    <Palette className="w-3 h-3 shrink-0" />
+                    <span>{lang === 'hi' ? 'विशिष्ट सांस्कृतिक पहचान बैज' : 'Dedicated cultural card generated'}</span>
+                  </>
+                )}
               </span>
             </div>
           </div>

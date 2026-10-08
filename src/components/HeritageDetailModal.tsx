@@ -28,6 +28,8 @@ import {
   Sliders,
   Globe,
   Camera,
+  Mountain,
+  Landmark,
 } from 'lucide-react';
 import { HeritageItem, MonumentPhoto } from '../types.ts';
 import {
@@ -317,8 +319,8 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
       setCrowdPhotos((prev) => [newP, ...prev.filter((p) => p.id !== newP.id)]);
       onShowToast(
         lang === 'hi'
-          ? '📸 फोटो जन-गैलरी में सफलतापूर्वक जोड़ दी गई!'
-          : '📸 Photo added to gallery successfully!',
+          ? 'फोटो जन-गैलरी में सफलतापूर्वक जोड़ दी गई!'
+          : 'Photo added to gallery successfully!',
         'success'
       );
       setShowPhotoModal(false);
@@ -478,7 +480,7 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
       window.speechSynthesis.speak(utterance);
       setIsPlayingAudio(true);
       onShowToast(
-        `🎧 ${selectedLangObj.nativeLabel} Audio Guide (${selectedLangObj.label}) · Tanpura Soundscape`,
+        `${selectedLangObj.nativeLabel} Audio Guide (${selectedLangObj.label}) · Tanpura Soundscape`,
         'info'
       );
     }
@@ -629,7 +631,7 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
             }`}
           >
             <History className="w-3.5 h-3.5 text-amber-400 animate-spin-slow" />
-            <span>{t.tab_timetravel || (lang === 'hi' ? '🏛️ काल-दृष्टि' : '🏛️ Time-Travel')}</span>
+            <span>{t.tab_timetravel || (lang === 'hi' ? 'काल-दृष्टि' : 'Time-Travel')}</span>
           </button>
           <button
             onClick={() => setTab('history')}
@@ -757,7 +759,7 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                     <div>
                       <div className="flex items-center gap-1.5">
                         <span className="font-bold text-xs text-white">
-                          {lang === 'hi' ? '🎧 विरासत ऑडियो गाइड एवं तानपुरा परिवेश' : '🎧 Heritage Audio Guide & Soundscape'}
+                          {lang === 'hi' ? 'विरासत ऑडियो गाइड एवं तानपुरा परिवेश' : 'Heritage Audio Guide & Soundscape'}
                         </span>
                         {isPlayingAudio && (
                           <span className="flex h-2 w-2 relative">
@@ -785,7 +787,7 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                         if (next) {
                           heritageSoundscape.playTempleChime();
                           heritageSoundscape.startAmbientDrone(0.05);
-                          onShowToast(lang === 'hi' ? '🎵 4-तार तानपुरा परिवेश प्रारंभ...' : '🎵 4-String Tanpura acoustic drone playing...', 'info');
+                          onShowToast(lang === 'hi' ? '4-तार तानपुरा परिवेश प्रारंभ...' : '4-String Tanpura acoustic drone playing...', 'info');
                         } else {
                           heritageSoundscape.stopAmbientDrone();
                           onShowToast(lang === 'hi' ? 'तानपुरा बंद' : 'Tanpura muted', 'info');
@@ -914,20 +916,23 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                     {/* 2. Geopolitical & Geographical Context */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-xl bg-white/[0.02] border border-white/10 text-xs">
                       <div className="p-2.5 rounded-lg bg-black/40 border border-white/5">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 block mb-0.5">
-                          📍 {lang === 'hi' ? 'भौगोलिक निर्देशांक' : 'Coordinates'}
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 mb-0.5 flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-amber-400" />
+                          <span>{lang === 'hi' ? 'भौगोलिक निर्देशांक' : 'Coordinates'}</span>
                         </span>
                         <span className="font-mono text-zinc-200 text-[11px] block">{dossier.geoContext.coordinates}</span>
                       </div>
                       <div className="p-2.5 rounded-lg bg-black/40 border border-white/5">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 block mb-0.5">
-                          ⛰️ {lang === 'hi' ? 'भू-भाग व ऊंचाई' : 'Terrain & Elevation'}
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 mb-0.5 flex items-center gap-1">
+                          <Mountain className="w-3 h-3 text-emerald-400" />
+                          <span>{lang === 'hi' ? 'भू-भाग व ऊंचाई' : 'Terrain & Elevation'}</span>
                         </span>
                         <span className="text-zinc-200 text-[11px] block truncate">{dossier.geoContext.elevation}</span>
                       </div>
                       <div className="p-2.5 rounded-lg bg-black/40 border border-white/5">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400 block mb-0.5">
-                          🏛️ {lang === 'hi' ? 'ए.एस.आई. प्रशासनिक वृत्त' : 'ASI Circle'}
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400 mb-0.5 flex items-center gap-1">
+                          <Landmark className="w-3 h-3 text-blue-400" />
+                          <span>{lang === 'hi' ? 'ए.एस.आई. प्रशासनिक वृत्त' : 'ASI Circle'}</span>
                         </span>
                         <span className="text-zinc-200 text-[11px] block truncate">{dossier.geoContext.asiCircle}</span>
                       </div>
@@ -942,7 +947,7 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                       <div className="space-y-2">
                         {(lang === 'hi' && dossier.hindiArchitecturalHighlights ? dossier.hindiArchitecturalHighlights : dossier.architecturalHighlights).map((feat, idx) => (
                           <div key={idx} className="flex items-start gap-2 text-xs text-zinc-300 leading-relaxed p-2.5 rounded-lg bg-black/30 border border-white/5">
-                            <span className="text-amber-400 font-bold shrink-0 mt-0.5">✦</span>
+                            <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
                             <span>{feat}</span>
                           </div>
                         ))}
@@ -1919,8 +1924,8 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                           MONUMENT_ARCHIVE_PHOTOS_CACHE.set(item.id, photos);
                           onShowToast(
                             lang === 'hi'
-                              ? `🏛️ ${photos.length} प्रामाणिक ऐतिहासिक तस्वीरें खोजी गईं!`
-                              : `🏛️ Found ${photos.length} authentic archive photos!`,
+                              ? `${photos.length} प्रामाणिक ऐतिहासिक तस्वीरें खोजी गईं!`
+                              : `Found ${photos.length} authentic archive photos!`,
                             'success'
                           );
                         } else {
@@ -1946,10 +1951,10 @@ export const HeritageDetailModal: React.FC<HeritageDetailModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setShowPhotoModal(!showPhotoModal)}
-                    className="text-zinc-400 hover:text-white text-xs px-2 py-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+                    className="text-zinc-400 hover:text-white text-xs px-2 py-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer inline-flex items-center gap-1"
                     title="Add custom caption or link"
                   >
-                    {showPhotoModal ? '✕' : `+ ${lang === 'hi' ? 'विवरण / लिंक' : 'Link / Caption'}`}
+                    {showPhotoModal ? <X className="w-3.5 h-3.5" /> : `+ ${lang === 'hi' ? 'विवरण / लिंक' : 'Link / Caption'}`}
                   </button>
                 </div>
               </div>

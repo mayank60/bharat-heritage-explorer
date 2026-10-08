@@ -27,7 +27,7 @@ export const OfflineSanctuaryBanner: React.FC<OfflineSanctuaryBannerProps> = ({
           </div>
           <div>
             <span className="font-bold text-emerald-300 font-mono text-[11px] uppercase tracking-wider mr-2">
-              {t.offline_active || '📶 Remote Sanctuary Offline Mode Active'}
+              {t.offline_active || 'Remote Sanctuary Offline Mode Active'}
             </span>
             <span className="text-stone-300 hidden md:inline">
               {t.offline_desc || `Zero-Data Mode: 36 States & ${cachedCount}+ monuments fully accessible off-grid.`}

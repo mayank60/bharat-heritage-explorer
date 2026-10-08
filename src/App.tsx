@@ -653,8 +653,8 @@ export default function App() {
     });
     showToast(
       lang === 'hi'
-        ? `🏛️ "${newItem.title}" राष्ट्रीय जन अभिलेखागार में सफलतापूर्वक जोड़ा गया!`
-        : `🏛️ "${newItem.title}" added to National Community Archive!`,
+        ? `"${newItem.title}" राष्ट्रीय जन अभिलेखागार में सफलतापूर्वक जोड़ा गया!`
+        : `"${newItem.title}" added to National Community Archive!`,
       'success'
     );
   };
@@ -666,8 +666,8 @@ export default function App() {
     setHeritageItems((prev) => prev.filter((h) => h.id !== deletedId));
     showToast(
       lang === 'hi'
-        ? '🏛️ धरोहर प्रविष्टि जन-अभिलेखागार से हटा दी गई।'
-        : '🏛️ Heritage entry removed from Community Archive.',
+        ? 'धरोहर प्रविष्टि जन-अभिलेखागार से हटा दी गई।'
+        : 'Heritage entry removed from Community Archive.',
       'info'
     );
   };
@@ -746,14 +746,14 @@ export default function App() {
             }
             showToast(
               TRANSLATIONS[lang]?.offline_active
-                ? `🏛️ ${TRANSLATIONS[lang].offline_active}`
-                : '🏛️ Offline-First Active: Loaded catalog from local cache.'
+                ? `${TRANSLATIONS[lang].offline_active}`
+                : 'Offline-First Active: Loaded catalog from local cache.'
             );
           } else {
             showToast(
               TRANSLATIONS[lang]?.switch_online
-                ? `🌐 ${TRANSLATIONS[lang].switch_online}`
-                : '🌐 Online Mode: Connected to central national repository.'
+                ? `${TRANSLATIONS[lang].switch_online}`
+                : 'Online Mode: Connected to central national repository.'
             );
           }
         }}

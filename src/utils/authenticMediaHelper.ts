@@ -346,18 +346,38 @@ export function generateDynamicMonumentSvg(
   const cleanPeriod = (period || 'Historic').replace(/[&<>'"]/g, '');
 
   // Select architectural motif based on category
-  let motifPath = 'M350 330 L400 170 L450 330 Z M380 170 L400 110 L420 170 Z'; // Temple Shikhara
+  let motifSvg = `
+    <!-- Temple Shikhara Elevation Silhouette -->
+    <path d="M280 320 H520 M310 320 V250 H490 V320 M330 250 L400 130 L470 250 Z M370 130 V100 H430 V130 Z M400 95 A5 5 0 1 1 400 85 A5 5 0 1 1 400 95" stroke="url(#gold)" stroke-width="2" fill="none" stroke-linejoin="round"/>
+    <path d="M350 250 V320 M380 250 V320 M420 250 V320 M450 250 V320" stroke="url(#gold)" stroke-width="1" stroke-opacity="0.4"/>
+    <path d="M360 210 H440 M370 170 H430 M380 140 H420" stroke="url(#gold)" stroke-width="1.2" stroke-opacity="0.6"/>
+  `;
   let accentColor = '#c9a24a'; // Royal Gold
 
   const catLower = category.toLowerCase();
   if (catLower.includes('fort') || catLower.includes('palace')) {
-    motifPath = 'M330 330 L330 200 L360 200 L360 220 L380 220 L380 200 L400 200 L400 220 L420 220 L420 200 L440 200 L440 220 L470 220 L470 330 Z'; // Fortress Battlement
+    motifSvg = `
+      <!-- Fortress Rampart & Gate Elevation -->
+      <path d="M260 320 H540 M280 320 V200 H330 V220 H360 V200 H440 V220 H470 V200 H520 V320" stroke="url(#gold)" stroke-width="2" fill="none" stroke-linejoin="round"/>
+      <path d="M370 320 C370 260, 430 260, 430 320 Z" stroke="url(#gold)" stroke-width="2" fill="none"/>
+      <path d="M300 240 H310 M490 240 H500 M300 270 H310 M490 270 H500" stroke="url(#gold)" stroke-width="1.5"/>
+    `;
     accentColor = '#e5a93c';
   } else if (catLower.includes('cave') || catLower.includes('rock')) {
-    motifPath = 'M320 330 C320 210, 480 210, 480 330 Z M350 330 C350 240, 450 240, 450 330 Z'; // Rock Arch
+    motifSvg = `
+      <!-- Rock-cut Chaitya Arch Vault Elevation -->
+      <path d="M270 320 H530 M310 320 C310 180, 490 180, 490 320" stroke="url(#gold)" stroke-width="2" fill="none"/>
+      <path d="M340 320 C340 220, 460 220, 460 320" stroke="url(#gold)" stroke-width="1.5" fill="none"/>
+      <circle cx="400" cy="235" r="28" stroke="url(#gold)" stroke-width="1.5" fill="none"/>
+      <path d="M400 135 L400 160" stroke="url(#gold)" stroke-width="2"/>
+    `;
     accentColor = '#d97706';
   } else if (catLower.includes('nature') || catLower.includes('lake') || catLower.includes('water')) {
-    motifPath = 'M320 330 C360 250, 400 310, 440 260 C460 230, 480 330, 480 330 Z'; // Mountain/Water
+    motifSvg = `
+      <!-- Natural Landscape Topographic Contour Lines -->
+      <path d="M260 320 L350 200 L410 270 L480 180 L540 320 Z" stroke="url(#gold)" stroke-width="2" fill="none" stroke-linejoin="round"/>
+      <path d="M280 320 Q400 295 520 320 M270 330 Q400 305 530 330" stroke="url(#gold)" stroke-width="1.2" fill="none" stroke-opacity="0.6"/>
+    `;
     accentColor = '#10b981';
   }
 
@@ -365,7 +385,7 @@ export function generateDynamicMonumentSvg(
     <defs>
       <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stop-color="#14110f"/>
-        <stop offset="50%" stop-color="#231512"/>
+        <stop offset="50%" stop-color="#1c1614"/>
         <stop offset="100%" stop-color="#0c0a10"/>
       </linearGradient>
       <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -373,15 +393,29 @@ export function generateDynamicMonumentSvg(
         <stop offset="50%" stop-color="#f5d77f"/>
         <stop offset="100%" stop-color="#c9a24a"/>
       </linearGradient>
+      <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ffffff" stroke-width="0.5" stroke-opacity="0.04"/>
+      </pattern>
     </defs>
+    <!-- Background Canvas with Precision Grid -->
     <rect width="100%" height="100%" fill="url(#g)"/>
-    <circle cx="400" cy="220" r="120" fill="#e0231c" opacity="0.12"/>
-    <circle cx="400" cy="220" r="85" fill="${accentColor}" opacity="0.08"/>
-    <path d="${motifPath}" fill="${accentColor}" opacity="0.85"/>
-    <circle cx="400" cy="105" r="5" fill="#ff5a3c"/>
-    <text x="400" y="370" font-family="Georgia,serif" font-size="22" font-weight="bold" fill="url(#gold)" text-anchor="middle" letter-spacing="1">${cleanTitle}</text>
-    <text x="400" y="400" font-family="sans-serif" font-size="12" font-weight="500" fill="#d1d5db" text-anchor="middle">${cleanLoc} · ${cleanPeriod} Era</text>
-    <text x="400" y="430" font-family="monospace" font-size="10" font-weight="bold" fill="${accentColor}" text-anchor="middle" letter-spacing="2">AUTHENTIC LIVING HERITAGE ARCHIVE</text>
+    <rect width="100%" height="100%" fill="url(#grid)"/>
+
+    <!-- Architectural Framing & Corner Registration Crosshairs -->
+    <rect x="25" y="25" width="750" height="450" fill="none" stroke="#c9a24a" stroke-width="0.75" stroke-opacity="0.3"/>
+    <path d="M20 35 H40 M30 20 V40 M760 35 H780 M770 20 V40 M20 465 H40 M30 450 V470 M760 465 H780 M770 450 V470" stroke="#c9a24a" stroke-width="0.75" stroke-opacity="0.5"/>
+
+    <!-- Radial Architectural Focus Aura -->
+    <circle cx="400" cy="220" r="140" fill="${accentColor}" opacity="0.04"/>
+    <circle cx="400" cy="220" r="90" fill="#e0231c" opacity="0.05"/>
+
+    <!-- Dynamic Architectural Line Silhouette -->
+    ${motifSvg}
+
+    <!-- Curatorial Typography & Documentation Header -->
+    <text x="400" y="372" font-family="Georgia, serif" font-size="21" font-weight="bold" fill="url(#gold)" text-anchor="middle" letter-spacing="1.5">${cleanTitle}</text>
+    <text x="400" y="402" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="500" fill="#d1d5db" text-anchor="middle" letter-spacing="0.5">${cleanLoc} · ${cleanPeriod} Era</text>
+    <text x="400" y="432" font-family="ui-monospace, monospace" font-size="9.5" font-weight="bold" fill="${accentColor}" text-anchor="middle" letter-spacing="2.5" opacity="0.9">AUTHENTIC LIVING HERITAGE ARCHIVE</text>
   </svg>`;
 
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
