@@ -2,12 +2,21 @@ const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
 
-const srcPath = 'C:/Users/HP/.gemini/antigravity-ide/brain/dec229cd-d836-4d23-8ce8-f6390018140e/.user_uploaded/media_1791455155257.jpg';
 const publicDir = path.resolve(__dirname, '../public');
+const srcAssetsDir = path.resolve(__dirname, '../src/assets');
+
+const candidatePaths = [
+  process.env.LOGO_SOURCE,
+  path.resolve(publicDir, 'logo.png'),
+  path.resolve(srcAssetsDir, 'logo.png'),
+].filter(Boolean);
+
+const srcPath = candidatePaths.find((p) => fs.existsSync(p));
 
 async function generate() {
-  if (!fs.existsSync(srcPath)) {
-    throw new Error(`Source logo not found at: ${srcPath}`);
+  if (!srcPath || !fs.existsSync(srcPath)) {
+    console.log('Notice: Logo source not found, existing favicons in public/ are retained.');
+    return;
   }
 
   // Exact circle coordinates measured from uploaded image:
@@ -42,7 +51,6 @@ async function generate() {
   await sharp(masked).resize(16, 16).png().toFile(path.join(publicDir, 'favicon-16x16.png'));
 
   // Also copy to src/assets for app usage
-  const srcAssetsDir = path.resolve(__dirname, '../src/assets');
   if (fs.existsSync(srcAssetsDir)) {
     await sharp(masked).resize(512, 512).png().toFile(path.join(srcAssetsDir, 'logo.png'));
   }
